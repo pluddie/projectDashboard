@@ -117,7 +117,7 @@ body::before{content:'';position:fixed;inset:0;
 /* label cell — fixed width, doesn't scroll horizontally */
 .g-lbl{width:var(--lw);min-width:var(--lw);flex-shrink:0;display:flex;align-items:center;gap:4px;
   padding:0 7px;border-right:1px solid var(--divider);overflow:hidden;
-  position:sticky;left:0;z-index:2;background:inherit}
+  position:sticky;left:0;z-index:9;background:inherit}
 .g-row.proj-row .g-lbl{background:var(--row-even)}
 .g-row.sub-row .g-lbl{padding-left:10px;background:var(--glass-hdr)}
 .g-row.add-row .g-lbl{background:var(--glass-hdr)}
@@ -444,12 +444,12 @@ function getMonthGroups(weeks){
   const g=[];let cur=null;
   weeks.forEach((w,i)=>{
     const k=w.getFullYear()+'-'+w.getMonth();
-    if(!cur||cur.key!==k){cur={key:k,label:w.toLocaleString('en',{month:'short',year:'numeric'}),weeks:[]};g.push(cur);}
-    cur.weeks.push({date:w,wn:getWeekOfYear(w),idx:i});
+    if(!cur||cur.key!==k){cur={key:k,label:w.toLocaleString('en',{month:'short'}),weeks:[]};g.push(cur);}
+    cur.weeks.push({date:w,wn:getWeekOfMonth(w),idx:i});
   });
   return g;
 }
-function getWeekOfYear(d){const jan1=new Date(d.getFullYear(),0,1);return Math.ceil(((d-jan1)/86400000+jan1.getDay()+1)/7);}
+function getWeekOfMonth(d){const m1=new Date(d.getFullYear(),d.getMonth(),1);return Math.ceil(((d-m1)/86400000+m1.getDay()+1)/7);}
 function dateToWeekIdx(date,weeks){
   let best=0,bestD=Infinity;
   weeks.forEach((w,i)=>{const d=Math.abs(w-date);if(d<bestD){bestD=d;best=i;}});
@@ -486,7 +486,7 @@ function renderGantt(){
     const wl=document.createElement('div');wl.className='week-labels';
     mg.weeks.forEach(w=>{
       const wc=document.createElement('div');wc.className='week-cell'+(w.idx===todayIdx?' today-wk':'');
-      wc.style.width=WEEK_W+'px';wc.textContent='W'+w.wn;wl.appendChild(wc);
+      wc.style.width=WEEK_W+'px';wc.textContent=w.wn;wl.appendChild(wc);
     });
     el.appendChild(wl);mRow.appendChild(el);
   });
@@ -526,8 +526,6 @@ function renderGantt(){
   if(nowOff>=0){
     const nl=document.createElement('div');nl.className='now-line-overlay';
     nl.style.cssText=`position:absolute;left:${getLabelW()+nowOff}px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--accent2),rgba(58,171,242,.3));z-index:8;pointer-events:none`;
-    const nlbl=document.createElement('div');nlbl.style.cssText='position:absolute;top:2px;left:4px;font-size:9px;font-weight:800;color:var(--accent2);white-space:nowrap;background:var(--glass-hdr);padding:1px 4px;border-radius:3px';
-    nlbl.textContent='NOW';nl.appendChild(nlbl);
     rowsEl.style.position='relative';
     rowsEl.appendChild(nl);
   }
@@ -552,11 +550,9 @@ function buildProjRow(proj,pi,weeks,totalW){
   const name=makeRowName(proj.name,v=>proj.name=v);
   const addSgBtn=makeRowAct(plusSvg(),'Add Sub Group');
   addSgBtn.addEventListener('click',e=>{e.stopPropagation();addSubgroup(pi);});
-  const editBtn=makeRowAct(editSvg(),'Edit');
-  editBtn.addEventListener('click',e=>{e.stopPropagation();openRowEditor(proj,pi,null);});
   const delBtn=makeRowAct(trashSvg(),'Delete','del');
   delBtn.addEventListener('click',e=>{e.stopPropagation();confirmDelete('Delete project "'+proj.name+'"?',()=>{projects.splice(pi,1);renderGantt();});});
-  lbl.append(colBtn,name,addSgBtn,editBtn,delBtn);
+  lbl.append(colBtn,name,addSgBtn,delBtn);
 
   const chart=document.createElement('div');chart.className='g-chart';chart.style.width=totalW+'px';
   // Aggregate bars: one mini-bar per subgroup spanning its full range
