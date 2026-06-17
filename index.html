@@ -11,7 +11,8 @@
   --text:#1a2540;--text-sub:#3a5080;--text-muted:#6a88b8;
   --accent:#3A5FE8;--accent2:#3AABF2;--accent-lt:rgba(58,95,232,.09);--accent-md:rgba(58,95,232,.17);
   --divider:rgba(58,95,232,.10);--hdr-title:#1a3070;--row-even:rgba(58,95,232,.03);--row-hover:rgba(58,95,232,.065);
-  --lw:190px; /* label column width */
+  --row-solid-proj:#eef2fc;--row-solid-sub:#f7f9fd;
+  --lw:150px; /* label column width */
   --rh-proj:36px; --rh-sub:30px; /* row heights, updated by JS */
 }
 [data-theme="dark"]{
@@ -20,6 +21,7 @@
   --text:#ddeaff;--text-sub:#7ea4d4;--text-muted:#4e6e9a;
   --accent:#5b83ff;--accent2:#3AABF2;--accent-lt:rgba(91,131,255,.13);--accent-md:rgba(91,131,255,.24);
   --divider:rgba(91,131,255,.12);--hdr-title:#8ab0ff;--row-even:rgba(91,131,255,.04);--row-hover:rgba(91,131,255,.09);
+  --row-solid-proj:#152040;--row-solid-sub:#101a34;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI','PingFang TC',sans-serif;font-size:13px;color:var(--text)}
@@ -117,13 +119,13 @@ body::before{content:'';position:fixed;inset:0;
 /* label cell — fixed width, doesn't scroll horizontally */
 .g-lbl{width:var(--lw);min-width:var(--lw);flex-shrink:0;display:flex;align-items:center;gap:4px;
   padding:0 7px;border-right:1px solid var(--divider);overflow:hidden;
-  position:sticky;left:0;z-index:9;background:inherit}
-.g-row.proj-row .g-lbl{background:var(--row-even)}
-.g-row.sub-row .g-lbl{padding-left:10px;background:var(--glass-hdr)}
-.g-row.add-row .g-lbl{background:var(--glass-hdr)}
+  position:sticky;left:0;z-index:20;background:var(--glass-hdr)}
+.g-row.proj-row .g-lbl{background:var(--row-solid-proj)}
+.g-row.sub-row .g-lbl{padding-left:10px;background:var(--row-solid-sub)}
+.g-row.add-row .g-lbl{background:var(--row-solid-sub)}
 /* override hover on label cell to match row */
-.g-row:hover .g-lbl{background:var(--row-hover)}
-.g-row.proj-row:hover .g-lbl{background:var(--row-even)}
+.g-row:hover .g-lbl{background:var(--row-solid-sub)}
+.g-row.proj-row:hover .g-lbl{background:var(--row-solid-proj)}
 
 /* chart cell — expands to full chart width */
 .g-chart{flex:1;position:relative;overflow:hidden}
@@ -160,8 +162,8 @@ body::before{content:'';position:fixed;inset:0;
 .gantt-bar-wrap{position:absolute;pointer-events:auto;z-index:2;height:calc(100% - 10px);top:5px}
 .gantt-bar-outer{position:relative;height:100%;border-radius:999px;overflow:hidden;cursor:pointer;transition:filter .15s}
 .gantt-bar-outer:hover{filter:brightness(1.08)}
-.gantt-bar-track{position:absolute;inset:0;border-radius:999px;opacity:.22}
-.gantt-bar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;min-width:4px}
+.gantt-bar-track{position:absolute;inset:0;border-radius:999px;opacity:.20}
+.gantt-bar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:0;min-width:0}
 .gantt-bar-label{position:absolute;inset:0;display:flex;align-items:center;font-size:10px;font-weight:700;color:#fff;
   pointer-events:none;z-index:3;text-shadow:0 1px 2px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;padding:0 10px}
 
@@ -197,7 +199,13 @@ body::before{content:'';position:fixed;inset:0;
   z-index:600;width:420px;max-height:85vh;overflow-y:auto;display:flex;flex-direction:column;gap:11px;
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .rep-header{display:flex;align-items:center;justify-content:space-between;gap:6px}
-.rep-header-title{font-size:13px;font-weight:700;color:var(--hdr-title);flex:1;text-align:center}
+.rep-header-title-wrap{display:flex;align-items:center;justify-content:center;gap:6px;flex:1;min-width:0}
+.rep-title-color-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;cursor:pointer;border:2px solid var(--glass-bdr);transition:transform .12s}
+.rep-title-color-dot:hover{transform:scale(1.15)}
+.rep-header-title{font-size:13px;font-weight:700;color:var(--hdr-title);text-align:center;outline:none;cursor:text;
+  border-radius:4px;padding:1px 4px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rep-header-title:hover{background:rgba(58,95,232,.07)}
+.rep-header-title:focus{background:rgba(58,95,232,.12);white-space:normal;text-overflow:clip}
 .rep-header-actions{display:flex;gap:6px}
 .rep-icon-btn{width:28px;height:28px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
   flex-shrink:0;background:var(--accent-lt);color:var(--accent);transition:background .15s,transform .12s}
@@ -206,17 +214,13 @@ body::before{content:'';position:fixed;inset:0;
 .rep-icon-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
 .rep-icon-btn.rep-apply{background:rgba(34,197,94,.14);color:#22c55e}
 .rep-icon-btn.rep-apply:hover{background:rgba(34,197,94,.24)}
+.rep-icon-btn.rep-del{background:rgba(239,68,68,.12);color:#ef4444}
+.rep-icon-btn.rep-del:hover{background:rgba(239,68,68,.22)}
 .rep-field{display:flex;flex-direction:column;gap:3px}
 .rep-label{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em}
 .rep-section{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;border-top:1px solid var(--divider);padding-top:8px;margin-top:2px}
 .rep-input{padding:6px 9px;border-radius:7px;border:1px solid var(--divider);background:var(--glass);color:var(--text);font-size:12px;font-family:inherit;outline:none;width:100%}
 .rep-input:focus{border-color:var(--accent)}
-.rep-namecolor-row{display:flex;align-items:flex-end;gap:10px}
-.rep-color-col{display:flex;flex-direction:column;gap:3px;align-items:center;flex-shrink:0}
-.rep-color-lbl{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em}
-.rep-color-circle{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid var(--glass-bdr);transition:transform .12s}
-.rep-color-circle:hover{transform:scale(1.08)}
-.rep-name-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .rep-inline-wheel{display:none;flex-direction:column;gap:9px;padding:12px;border-radius:12px;background:var(--accent-lt)}
 .rep-bar-item{display:flex;align-items:center;gap:5px;padding:5px 6px;border-radius:8px;background:var(--accent-lt);margin-bottom:4px}
 .rep-bar-tag{flex:1;min-width:0;padding:4px 7px;border-radius:6px;border:1px solid transparent;background:var(--glass);color:var(--text);font-size:11px;font-family:inherit;outline:none}
@@ -303,6 +307,10 @@ body::before{content:'';position:fixed;inset:0;
       <div class="card-hdr">
         <span class="card-title">Project Timeline</span>
         <div class="card-hdr-right">
+          <button class="card-btn" id="nav-today" title="Jump to today">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Today
+          </button>
           <div class="zoom-group">
             <span class="zoom-label">H</span>
             <input type="range" class="zoom-slider" id="zoom-h" min="14" max="60" step="2" value="26">
@@ -348,11 +356,6 @@ body::before{content:'';position:fixed;inset:0;
       <div class="card" id="updates-card">
         <div class="card-hdr">
           <span class="card-title">Project Updates</span>
-          <div class="card-hdr-right">
-            <button class="card-btn" id="add-update-btn">
-              <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add
-            </button>
-          </div>
         </div>
         <div class="card-body" id="updates-body"></div>
       </div>
@@ -404,9 +407,14 @@ let WEEK_W=26;          // px per week column
 let RH_PROJ=36;         // project row height
 let RH_SUB=30;          // sub-group row height
 let simulatedToday=null;
-let viewYear=2026;
-let viewStart=new Date(2026,0,4);
-let viewEnd=new Date(2026,11,27);
+let viewYear=2026;      // year currently shown in the nav label (updates as you scroll)
+/* The timeline itself spans a wide, fixed range so scrolling left/right
+   feels continuous across many years — it is NOT re-generated per year.
+   Year nav buttons / Today just scroll to the right horizontal position. */
+const RANGE_YEARS_BEFORE=6, RANGE_YEARS_AFTER=6;
+const BASE_YEAR=2026;
+let viewStart=new Date(BASE_YEAR-RANGE_YEARS_BEFORE,0,4);
+let viewEnd=new Date(BASE_YEAR+RANGE_YEARS_AFTER,11,27);
 let idCnt=100;
 const newId=()=>'id'+(++idCnt);
 let confirmCb=null;
@@ -455,9 +463,55 @@ function dateToWeekIdx(date,weeks){
   weeks.forEach((w,i)=>{const d=Math.abs(w-date);if(d<bestD){bestD=d;best=i;}});
   return best;
 }
+/* Fractional position (in week-units) of `date` along the weeks axis.
+   Unlike dateToWeekIdx (nearest-week, used for snapping UI), this gives
+   a continuous value so pixel placement lines up exactly with the
+   today/NOW line, which is also computed fractionally. */
+function dateToWeekPos(date,weeks){
+  if(date<=weeks[0])return 0;
+  if(date>=weeks[weeks.length-1])return weeks.length-1;
+  for(let i=0;i<weeks.length-1;i++){
+    if(date>=weeks[i]&&date<weeks[i+1]){
+      return i+((date-weeks[i])/(weeks[i+1]-weeks[i]));
+    }
+  }
+  return weeks.length-1;
+}
 function fmtDate(d){if(!d)return '';return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function parseDate(s){if(!s)return null;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
-function setViewYear(y){viewYear=y;viewStart=new Date(y,0,4);viewEnd=new Date(y,11,27);document.getElementById('nav-label').textContent=y;}
+/* Scroll the gantt area so that Jan 1 of `y` is at the left edge */
+function scrollToYear(y){
+  const weeks=getWeeks();
+  const jan1=new Date(y,0,1);
+  const idx=dateToWeekIdx(jan1,weeks);
+  const scrollArea=document.getElementById('gantt-scroll-area');
+  scrollArea.scrollLeft=Math.max(0,idx*WEEK_W-4);
+  viewYear=y;
+  document.getElementById('nav-label').textContent=y;
+}
+/* Scroll the gantt area so today's date is centered in view */
+function scrollToToday(){
+  const weeks=getWeeks();
+  const today=getToday();
+  const idx=dateToWeekIdx(today,weeks);
+  const scrollArea=document.getElementById('gantt-scroll-area');
+  const visibleW=scrollArea.clientWidth-getLabelW();
+  scrollArea.scrollLeft=Math.max(0,idx*WEEK_W-visibleW/2);
+  viewYear=today.getFullYear();
+  document.getElementById('nav-label').textContent=viewYear;
+}
+/* Update the year label shown in the nav based on what's currently scrolled into view */
+function updateYearLabelFromScroll(){
+  const scrollArea=document.getElementById('gantt-scroll-area');
+  const weeks=getWeeks();
+  const visibleLeftPx=scrollArea.scrollLeft;
+  const idx=Math.round(visibleLeftPx/WEEK_W);
+  const w=weeks[Math.max(0,Math.min(weeks.length-1,idx))];
+  if(w){
+    viewYear=w.getFullYear();
+    document.getElementById('nav-label').textContent=viewYear;
+  }
+}
 function getNowOffset(weeks){
   const now=getToday();
   for(let i=0;i<weeks.length-1;i++){if(now>=weeks[i]&&now<weeks[i+1])return(i+((now-weeks[i])/(weeks[i+1]-weeks[i])))*WEEK_W;}
@@ -533,11 +587,11 @@ function renderGantt(){
   /* Mirror header scroll when scroll-area scrolls horizontally */
   const scrollArea=document.getElementById('gantt-scroll-area');
   const hdrChart=document.getElementById('gantt-fixed-hdr-chart');
-  scrollArea.onscroll=()=>{hdrChart.scrollLeft=scrollArea.scrollLeft;};
+  scrollArea.onscroll=()=>{hdrChart.scrollLeft=scrollArea.scrollLeft;updateYearLabelFromScroll();};
 }
 
 function getLabelW(){
-  return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--lw'))||190;
+  return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--lw'))||150;
 }
 
 /* ── Project row ── */
@@ -578,11 +632,7 @@ function buildSubRow(sg,proj,pi,si,weeks,totalW){
   const lbl=document.createElement('div');lbl.className='g-lbl';
   const name=makeRowName(sg.name,v=>sg.name=v);
   name.style.paddingLeft='4px';
-  const editBtn=makeRowAct(editSvg(),'Edit');
-  editBtn.addEventListener('click',e=>{e.stopPropagation();openRowEditor(sg,pi,si);});
-  const delBtn=makeRowAct(trashSvg(),'Delete','del');
-  delBtn.addEventListener('click',e=>{e.stopPropagation();confirmDelete('Delete "'+sg.name+'"?',()=>{projects[pi].subgroups.splice(si,1);renderGantt();});});
-  lbl.append(name,editBtn,delBtn);
+  lbl.append(name);
 
   const chart=document.createElement('div');chart.className='g-chart';chart.style.width=totalW+'px';
   const layer=document.createElement('div');layer.className='gantt-bars-layer';
@@ -594,9 +644,9 @@ function buildSubRow(sg,proj,pi,si,weeks,totalW){
 
 /* ── Build bar element ── */
 function buildBarEl(bar,color,weeks,totalW,onClick){
-  const si=dateToWeekIdx(bar.start,weeks);
-  const ei=dateToWeekIdx(bar.end,weeks);
-  const left=si*WEEK_W, width=Math.max((ei-si+1)*WEEK_W,WEEK_W);
+  const sPos=dateToWeekPos(bar.start,weeks);
+  const ePos=dateToWeekPos(bar.end,weeks);
+  const left=sPos*WEEK_W, width=Math.max((ePos-sPos)*WEEK_W,6);
   const prog=autoProgress(bar);
   const wrap=document.createElement('div');wrap.className='gantt-bar-wrap';wrap.style.cssText=`left:${left}px;width:${width}px`;
   const outer=document.createElement('div');outer.className='gantt-bar-outer';
@@ -621,7 +671,6 @@ function makeCollapse(closed){
   b.innerHTML=`<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>`;return b;
 }
 function plusSvg(){return`<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;}
-function editSvg(){return`<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;}
 function trashSvg(){return`<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1.2 14.1a2 2 0 0 1-2 1.9H8.2a2 2 0 0 1-2-1.9L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;}
 
 /* ═══ ROW EDITOR POPUP ═══ */
@@ -634,58 +683,61 @@ function openRowEditor(owner,pi,si){
   const backBtn=document.createElement('button');backBtn.className='rep-icon-btn';backBtn.title='Close';
   backBtn.innerHTML=`<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
   backBtn.addEventListener('click',closeRowEditor);
-  const titleEl=document.createElement('div');titleEl.className='rep-header-title';titleEl.textContent=isProject?'Edit Project':'Edit Sub Group';
+
+  // Title block: color dot + editable name, shown directly in the header
+  const titleWrap=document.createElement('div');titleWrap.className='rep-header-title-wrap';
+  const colorDot=document.createElement('div');colorDot.className='rep-title-color-dot';colorDot.style.background=owner.color||DEFAULT_COLOR;colorDot.title='Change color';
+  const titleEl=document.createElement('span');titleEl.className='rep-header-title';titleEl.contentEditable='true';titleEl.id='rep-name';titleEl.textContent=owner.name||'';
+  titleEl.addEventListener('blur',()=>{owner.name=titleEl.textContent||owner.name;});
+  titleEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();titleEl.blur();}});
+  titleWrap.append(colorDot,titleEl);
+
   const applyBtn=document.createElement('button');applyBtn.className='rep-icon-btn rep-apply';applyBtn.title='Save';
   applyBtn.innerHTML=`<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`;
-  applyBtn.addEventListener('click',()=>{owner.name=document.getElementById('rep-name').value||owner.name;closeRowEditor();renderGantt();});
-  const hActs=document.createElement('div');hActs.className='rep-header-actions';hActs.appendChild(applyBtn);
-  hdr.append(backBtn,titleEl,hActs);popup.appendChild(hdr);
+  applyBtn.addEventListener('click',()=>{owner.name=titleEl.textContent||owner.name;closeRowEditor();renderGantt();});
+  const delBtn=document.createElement('button');delBtn.className='rep-icon-btn rep-del';delBtn.title='Delete';
+  delBtn.innerHTML=trashSvg();
+  delBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(isProject)confirmDelete('Delete project "'+owner.name+'"?',()=>{projects.splice(pi,1);closeRowEditor();renderGantt();});
+    else confirmDelete('Delete "'+owner.name+'"?',()=>{projects[pi].subgroups.splice(si,1);closeRowEditor();renderGantt();});
+  });
+  const hActs=document.createElement('div');hActs.className='rep-header-actions';hActs.append(delBtn,applyBtn);
+  hdr.append(backBtn,titleWrap,hActs);popup.appendChild(hdr);
 
-  // Color + Name
-  const ncRow=document.createElement('div');ncRow.className='rep-namecolor-row';
-  const colorCol=document.createElement('div');colorCol.className='rep-color-col';
-  const colorLbl=document.createElement('div');colorLbl.className='rep-color-lbl';colorLbl.textContent='Color';
-  const colorCircle=document.createElement('div');colorCircle.className='rep-color-circle';colorCircle.style.background=owner.color||DEFAULT_COLOR;colorCircle.title='Change color';
-  colorCol.append(colorLbl,colorCircle);
-  const nameCol=document.createElement('div');nameCol.className='rep-name-col';
-  const nameLbl=document.createElement('div');nameLbl.className='rep-label';nameLbl.textContent='Name';
-  const nameInput=document.createElement('input');nameInput.className='rep-input';nameInput.type='text';nameInput.id='rep-name';nameInput.value=owner.name||'';
-  nameCol.append(nameLbl,nameInput);
-  ncRow.append(colorCol,nameCol);popup.appendChild(ncRow);
-
+  // Inline color wheel — toggled by clicking the color dot in the header
   const wheelPanel=document.createElement('div');wheelPanel.className='rep-inline-wheel';popup.appendChild(wheelPanel);
-  colorCircle.addEventListener('click',ev=>{
+  colorDot.addEventListener('click',ev=>{
     ev.stopPropagation();
     const open=wheelPanel.style.display==='flex';
     wheelPanel.style.display=open?'none':'flex';
-    if(!open)buildWheelPanel(owner,colorCircle,wheelPanel);
+    if(!open)buildWheelPanel(owner,colorDot,wheelPanel);
   });
 
-  // Durations
-  const dsec=document.createElement('div');dsec.className='rep-section';dsec.textContent='Durations';popup.appendChild(dsec);
+  // Item
+  const dsec=document.createElement('div');dsec.className='rep-section';dsec.textContent='Item';popup.appendChild(dsec);
   const blist=document.createElement('div');blist.id='rep-bar-list';
   function renderBarList(){
     blist.innerHTML='';
     if(!owner.bars||!owner.bars.length){
       const em=document.createElement('div');em.style.cssText='font-size:10px;color:var(--text-muted);padding:2px 0';
-      em.textContent='No durations — click + Add';blist.appendChild(em);
+      em.textContent='No item — click + Add';blist.appendChild(em);
     }
     (owner.bars||[]).forEach((bar,bi)=>{
       const item=document.createElement('div');item.className='rep-bar-item';
       const tag=document.createElement('input');tag.className='rep-bar-tag';tag.type='text';tag.placeholder='Tag';tag.value=bar.label||'';
       tag.addEventListener('input',()=>{bar.label=tag.value;renderGantt();});
-      const sd=document.createElement('input');sd.className='rep-bar-date';sd.type='date';sd.value=fmtDate(bar.start);
-      sd.addEventListener('change',()=>{const d=parseDate(sd.value);if(d){bar.start=d;renderGantt();}});
-      const ed=document.createElement('input');ed.className='rep-bar-date';ed.type='date';ed.value=fmtDate(bar.end);
-      ed.addEventListener('change',()=>{const d=parseDate(ed.value);if(d){bar.end=d;renderGantt();}});
+      const rangeBtn=document.createElement('button');rangeBtn.className='rep-bar-range-btn';
+      rangeBtn.textContent=fmtDate(bar.start)+'  →  '+fmtDate(bar.end);
+      rangeBtn.addEventListener('click',ev=>{ev.stopPropagation();openDateRangePicker(rangeBtn,bar,()=>{renderBarList();renderGantt();});});
       const db=document.createElement('button');db.className='rep-bar-del';db.title='Delete';
       db.innerHTML=`<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
       db.addEventListener('click',()=>{owner.bars.splice(bi,1);renderBarList();renderGantt();});
-      item.append(tag,sd,ed,db);blist.appendChild(item);
+      item.append(tag,rangeBtn,db);blist.appendChild(item);
     });
   }
   renderBarList();popup.appendChild(blist);
-  const addBarBtn=document.createElement('button');addBarBtn.className='rep-add-bar';addBarBtn.textContent='+ Add Duration';
+  const addBarBtn=document.createElement('button');addBarBtn.className='rep-add-bar';addBarBtn.textContent='+ Add Item';
   addBarBtn.addEventListener('click',()=>{
     const s=new Date(viewStart),e=new Date(viewEnd),span=e-s;
     owner.bars.push({id:newId(),label:'',start:new Date(s.getTime()+span*0.1),end:new Date(s.getTime()+span*0.4)});
@@ -705,6 +757,101 @@ function closeRowEditor(){
   document.getElementById('row-editor-popup').style.display='none';
   document.getElementById('rep-overlay').classList.remove('show');
 }
+
+/* ═══ UNIFIED DATE RANGE CALENDAR PICKER ═══
+   Single calendar: first click sets start, second click sets end
+   (auto-swaps if end < start). Click outside or Done to close. */
+let drpState=null;
+function openDateRangePicker(anchorEl,bar,onChange){
+  const existing=document.getElementById('date-range-picker');
+  if(existing)existing.remove();
+
+  const pop=document.createElement('div');pop.id='date-range-picker';pop.className='drp-popup';
+  drpState={bar,onChange,pendingStart:new Date(bar.start),pendingEnd:new Date(bar.end),
+            viewMonth:new Date(bar.start.getFullYear(),bar.start.getMonth(),1),
+            clickStage:'start'};
+
+  renderDRP(pop);
+  document.body.appendChild(pop);
+
+  const rect=anchorEl.getBoundingClientRect();
+  let top=rect.bottom+6,left=rect.left;
+  if(left+264>window.innerWidth)left=window.innerWidth-268;
+  if(top+340>window.innerHeight)top=rect.top-344;
+  pop.style.top=top+'px';pop.style.left=left+'px';
+
+  setTimeout(()=>{document.addEventListener('mousedown',drpOutsideClick);},0);
+}
+function drpOutsideClick(e){
+  const pop=document.getElementById('date-range-picker');
+  if(pop&&!pop.contains(e.target)){
+    document.removeEventListener('mousedown',drpOutsideClick);
+    pop.remove();
+  }
+}
+function renderDRP(pop){
+  pop.innerHTML='';
+  const st=drpState;
+
+  const hdr=document.createElement('div');hdr.className='drp-hdr';
+  const prevBtn=document.createElement('button');prevBtn.className='drp-nav-btn';prevBtn.textContent='‹';
+  prevBtn.addEventListener('click',e=>{e.stopPropagation();st.viewMonth=new Date(st.viewMonth.getFullYear(),st.viewMonth.getMonth()-1,1);renderDRP(pop);});
+  const mLbl=document.createElement('div');mLbl.className='drp-month-lbl';
+  mLbl.textContent=st.viewMonth.toLocaleString('en',{month:'long'})+' '+st.viewMonth.getFullYear();
+  const nextBtn=document.createElement('button');nextBtn.className='drp-nav-btn';nextBtn.textContent='›';
+  nextBtn.addEventListener('click',e=>{e.stopPropagation();st.viewMonth=new Date(st.viewMonth.getFullYear(),st.viewMonth.getMonth()+1,1);renderDRP(pop);});
+  hdr.append(prevBtn,mLbl,nextBtn);pop.appendChild(hdr);
+
+  const rangeDisp=document.createElement('div');rangeDisp.className='drp-range-display';
+  rangeDisp.textContent=fmtDate(st.pendingStart)+'  →  '+fmtDate(st.pendingEnd);
+  pop.appendChild(rangeDisp);
+
+  const dow=document.createElement('div');dow.className='drp-dow-row';
+  ['S','M','T','W','T','F','S'].forEach(d=>{const c=document.createElement('div');c.className='drp-dow';c.textContent=d;dow.appendChild(c);});
+  pop.appendChild(dow);
+
+  const grid=document.createElement('div');grid.className='drp-grid';
+  const first=new Date(st.viewMonth.getFullYear(),st.viewMonth.getMonth(),1);
+  const startOffset=first.getDay();
+  const daysInMonth=new Date(st.viewMonth.getFullYear(),st.viewMonth.getMonth()+1,0).getDate();
+  for(let i=0;i<startOffset;i++){grid.appendChild(document.createElement('div'));}
+  for(let d=1;d<=daysInMonth;d++){
+    const cellDate=new Date(st.viewMonth.getFullYear(),st.viewMonth.getMonth(),d);
+    const cell=document.createElement('button');cell.className='drp-day';cell.textContent=d;
+    const inRange=cellDate>=normalizeDay(st.pendingStart)&&cellDate<=normalizeDay(st.pendingEnd);
+    const isStart=sameDay(cellDate,st.pendingStart),isEnd=sameDay(cellDate,st.pendingEnd);
+    if(inRange)cell.classList.add('in-range');
+    if(isStart)cell.classList.add('range-start');
+    if(isEnd)cell.classList.add('range-end');
+    if(sameDay(cellDate,getToday()))cell.classList.add('is-today');
+    cell.addEventListener('click',e=>{
+      e.stopPropagation();
+      if(st.clickStage==='start'){
+        st.pendingStart=cellDate;st.pendingEnd=cellDate;st.clickStage='end';
+      }else{
+        if(cellDate<st.pendingStart){st.pendingEnd=st.pendingStart;st.pendingStart=cellDate;}
+        else{st.pendingEnd=cellDate;}
+        st.clickStage='start';
+      }
+      renderDRP(pop);
+    });
+    grid.appendChild(cell);
+  }
+  pop.appendChild(grid);
+
+  const actions=document.createElement('div');actions.className='drp-actions';
+  const doneBtn=document.createElement('button');doneBtn.className='drp-done-btn';doneBtn.textContent='Done';
+  doneBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    st.bar.start=st.pendingStart;st.bar.end=st.pendingEnd;
+    pop.remove();
+    document.removeEventListener('mousedown',drpOutsideClick);
+    st.onChange();
+  });
+  actions.appendChild(doneBtn);pop.appendChild(actions);
+}
+function normalizeDay(d){const r=new Date(d);r.setHours(0,0,0,0);return r;}
+function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
 
 /* ═══ INLINE COLOR WHEEL ═══ */
 function buildWheelPanel(owner,colorCircle,panel){
@@ -783,7 +930,7 @@ function renderUpdates(){
     item.append(light,txt,del);body.appendChild(item);
   });
   const addRow=document.createElement('div');addRow.className='update-add-row';
-  addRow.innerHTML=`<div class="status-light green" style="opacity:.35;flex-shrink:0"></div><span>Click + Add or press Enter to create update…</span>`;
+  addRow.innerHTML=`<div class="status-light green" style="opacity:.35;flex-shrink:0"></div><span>Click here or press Enter to add an update…</span>`;
   addRow.addEventListener('click',addUpdate);body.appendChild(addRow);
 }
 function addUpdate(){
@@ -809,8 +956,9 @@ todayInput.addEventListener('change',()=>{simulatedToday=parseDate(todayInput.va
 document.getElementById('reset-today-btn').addEventListener('click',()=>{simulatedToday=null;todayInput.value=fmtDate(new Date());renderGantt();});
 
 /* ═══ YEAR NAV ═══ */
-document.getElementById('nav-prev').addEventListener('click',()=>{setViewYear(viewYear-1);renderGantt();});
-document.getElementById('nav-next').addEventListener('click',()=>{setViewYear(viewYear+1);renderGantt();});
+document.getElementById('nav-prev').addEventListener('click',()=>{scrollToYear(viewYear-1);});
+document.getElementById('nav-next').addEventListener('click',()=>{scrollToYear(viewYear+1);});
+document.getElementById('nav-today').addEventListener('click',()=>{scrollToToday();});
 
 /* ═══ ZOOM ═══ */
 function applyZoom(){
@@ -827,12 +975,12 @@ document.getElementById('zoom-v').addEventListener('input',function(){
 
 /* ═══ CLOSE POPUP ═══ */
 document.getElementById('rep-overlay').addEventListener('click',closeRowEditor);
-document.getElementById('add-update-btn').addEventListener('click',addUpdate);
 
 /* ═══ INIT ═══ */
 applyZoom();
 renderGantt();
 renderUpdates();
+scrollToToday();
 </script>
 </body>
 </html>
