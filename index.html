@@ -102,8 +102,9 @@ body::before{content:'';position:fixed;inset:0;
 #gantt-wrap{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;position:relative}
 
 /* Fold handle — sits on the seam between the label column and the chart;
-   hover reveals an arrow, click collapses/expands the label column so the
-   timeline gets more horizontal room (especially useful on mobile). */
+   the arrow is hidden by default (keeps screenshots/reports clean) and
+   only fades in on hover over the seam. Click collapses/expands the label
+   column so the timeline gets more horizontal room. */
 .gantt-fold-handle{position:absolute;top:0;bottom:0;left:var(--lw);width:18px;margin-left:-9px;z-index:55;
   cursor:pointer;display:flex;align-items:center;justify-content:center;transition:left .22s ease}
 /* When collapsed, --lw is 0 — centering the handle on the seam would push
@@ -113,13 +114,9 @@ body::before{content:'';position:fixed;inset:0;
 .gfh-arrow{width:20px;height:20px;border-radius:50%;background:var(--accent-lt);color:var(--accent);
   border:1px solid var(--glass-bdr);
   display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;line-height:1;
-  opacity:.7;transition:opacity .15s,background .15s,transform .2s,border-color .15s;box-shadow:0 2px 8px rgba(0,0,0,.14)}
+  opacity:0;transition:opacity .15s,background .15s,transform .2s,border-color .15s;box-shadow:0 2px 8px rgba(0,0,0,.14)}
 .gantt-fold-handle:hover .gfh-arrow{opacity:1;background:var(--accent-md);border-color:var(--accent)}
-/* When the label column is collapsed, the handle has no seam to sit on —
-   keep the arrow clearly visible (not just on hover) so users can find
-   the affordance to expand again. */
-#gantt-wrap.lbl-collapsed .gfh-arrow{transform:rotate(180deg);opacity:.9;background:var(--accent-md)}
-#gantt-wrap.lbl-collapsed .gantt-fold-handle:hover .gfh-arrow{opacity:1}
+#gantt-wrap.lbl-collapsed .gfh-arrow{transform:rotate(180deg)}
 
 /* Fixed header — sits above scroll area, never moves */
 #gantt-fixed-hdr{flex-shrink:0;display:flex;background:var(--glass-hdr);border-bottom:1px solid var(--divider);z-index:10}
