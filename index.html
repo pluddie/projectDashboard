@@ -752,7 +752,8 @@ function renderGantt(){
 }
 
 function getLabelW(){
-  return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--lw'))||150;
+  if(window.lblCollapsed)return 0;
+  return (typeof window.LW_EXPANDED==='number'?window.LW_EXPANDED:150);
 }
 
 /* ── Project row ── */
@@ -1380,11 +1381,11 @@ document.getElementById('rep-overlay').addEventListener('click',closeRowEditor);
 /* ═══ LABEL COLUMN FOLD ═══ */
 const ganttWrapEl=document.getElementById('gantt-wrap');
 const foldHandle=document.getElementById('gantt-fold-handle');
-const LW_EXPANDED=150;
-let lblCollapsed=false;
+window.LW_EXPANDED=150;
+window.lblCollapsed=false;
 function setLblCollapsed(v){
-  lblCollapsed=v;
-  document.documentElement.style.setProperty('--lw',v?'0px':LW_EXPANDED+'px');
+  window.lblCollapsed=v;
+  document.documentElement.style.setProperty('--lw',v?'0px':window.LW_EXPANDED+'px');
   ganttWrapEl.classList.toggle('lbl-collapsed',v);
   foldHandle.title=v?'Expand project list':'Collapse project list';
   // The today/NOW line's left offset is baked in as an inline px value at
@@ -1393,7 +1394,7 @@ function setLblCollapsed(v){
   // of alignment with the bars whenever the label column folds/unfolds.
   renderGantt();
 }
-foldHandle.addEventListener('click',()=>setLblCollapsed(!lblCollapsed));
+foldHandle.addEventListener('click',()=>setLblCollapsed(!window.lblCollapsed));
 // On small screens, start collapsed so the timeline has more room by default
 if(window.innerWidth<=640)setLblCollapsed(true);
 
