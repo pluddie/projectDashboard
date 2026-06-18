@@ -60,7 +60,7 @@ body::before{content:'';position:fixed;inset:0;
 .card-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
 
 /* Gantt settings dropdown panel */
-.gantt-settings-panel{position:absolute;top:46px;right:11px;z-index:120;width:230px;
+.gantt-settings-panel{position:absolute;top:46px;right:11px;z-index:120;width:min(230px,calc(100vw - 22px));
   background:var(--glass-hdr);border:1px solid var(--glass-bdr);border-radius:12px;padding:12px;
   box-shadow:0 10px 32px rgba(0,0,0,.16);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   display:flex;flex-direction:column;gap:10px}
@@ -79,8 +79,8 @@ body::before{content:'';position:fixed;inset:0;
 [data-theme="dark"] .gsp-toggle-slider{background:#2a3550}
 .zoom-slider{width:64px;height:3px;accent-color:var(--accent);cursor:pointer;border:none;outline:none}
 .zoom-val{font-size:10px;font-weight:700;color:var(--accent);min-width:24px;text-align:right}
-.gsp-date-input{flex-shrink:0;width:118px;padding:4px 8px;border-radius:6px;border:1px solid var(--divider);background:var(--glass);
-  color:var(--text);font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;outline:none;
+.gsp-date-input{flex-shrink:0;width:118px;margin-left:auto;padding:4px 8px;border-radius:6px;border:1px solid var(--divider);background:var(--glass);
+  color:var(--text);font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;outline:none;text-align:right;
   transition:border-color .15s,background .15s}
 .gsp-date-input:hover{border-color:var(--accent)}
 .gsp-date-input:focus{border-color:var(--accent);background:var(--accent-lt)}
@@ -99,12 +99,34 @@ body::before{content:'';position:fixed;inset:0;
          #gantt-rows      ← all rows, each row has label+chart side by side
    ═══════════════════════════════════════════════════ */
 
-#gantt-wrap{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+#gantt-wrap{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;position:relative}
+
+/* Fold handle — sits on the seam between the label column and the chart;
+   hover reveals an arrow, click collapses/expands the label column so the
+   timeline gets more horizontal room (especially useful on mobile). */
+.gantt-fold-handle{position:absolute;top:0;bottom:0;left:var(--lw);width:18px;margin-left:-9px;z-index:55;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:left .22s ease}
+/* When collapsed, --lw is 0 — centering the handle on the seam would push
+   half of it past the container's left edge and get clipped by
+   #gantt-wrap's overflow:hidden. Pull it fully inside instead. */
+#gantt-wrap.lbl-collapsed .gantt-fold-handle{left:0;margin-left:0;width:20px}
+.gfh-arrow{width:20px;height:20px;border-radius:50%;background:var(--accent-lt);color:var(--accent);
+  border:1px solid var(--glass-bdr);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;line-height:1;
+  opacity:.7;transition:opacity .15s,background .15s,transform .2s,border-color .15s;box-shadow:0 2px 8px rgba(0,0,0,.14)}
+.gantt-fold-handle:hover .gfh-arrow{opacity:1;background:var(--accent-md);border-color:var(--accent)}
+/* When the label column is collapsed, the handle has no seam to sit on —
+   keep the arrow clearly visible (not just on hover) so users can find
+   the affordance to expand again. */
+#gantt-wrap.lbl-collapsed .gfh-arrow{transform:rotate(180deg);opacity:.9;background:var(--accent-md)}
+#gantt-wrap.lbl-collapsed .gantt-fold-handle:hover .gfh-arrow{opacity:1}
 
 /* Fixed header — sits above scroll area, never moves */
 #gantt-fixed-hdr{flex-shrink:0;display:flex;background:var(--glass-hdr);border-bottom:1px solid var(--divider);z-index:10}
 #gantt-fixed-hdr-label{width:var(--lw);min-width:var(--lw);flex-shrink:0;display:flex;align-items:center;
-  padding:0 10px;border-right:1px solid var(--divider)}
+  padding:0 10px;border-right:1px solid var(--divider);overflow:hidden;
+  transition:width .22s ease,min-width .22s ease,padding .22s ease,border-color .22s ease}
+#gantt-wrap.lbl-collapsed #gantt-fixed-hdr-label{padding:0;border-right-color:transparent}
 .year-nav{display:flex;align-items:center;gap:4px;width:100%}
 .year-nav-btn{width:22px;height:22px;border-radius:6px;border:none;cursor:pointer;background:var(--accent-lt);color:var(--accent);
   font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background .15s}
@@ -139,13 +161,16 @@ body::before{content:'';position:fixed;inset:0;
 /* label cell — fixed width, doesn't scroll horizontally */
 .g-lbl{width:var(--lw);min-width:var(--lw);flex-shrink:0;display:flex;align-items:center;gap:4px;
   padding:0 7px;border-right:1px solid var(--divider);overflow:hidden;
-  position:sticky;left:0;z-index:20;background:var(--glass-hdr)}
+  position:sticky;left:0;z-index:20;background:var(--glass-hdr);
+  transition:width .22s ease,min-width .22s ease,padding .22s ease,border-color .22s ease}
 .g-row.proj-row .g-lbl{background:var(--row-solid-proj)}
 .g-row.sub-row .g-lbl{padding-left:10px;background:var(--row-solid-sub)}
 .g-row.add-row .g-lbl{background:var(--row-solid-sub)}
 /* override hover on label cell to match row */
 .g-row:hover .g-lbl{background:var(--row-solid-sub)}
 .g-row.proj-row:hover .g-lbl{background:var(--row-solid-proj)}
+/* fully collapsed: kill padding + border so the column truly shrinks to a hairline */
+#gantt-wrap.lbl-collapsed .g-lbl,#gantt-wrap.lbl-collapsed .g-row.sub-row .g-lbl{padding:0;border-right-color:transparent}
 
 /* chart cell — expands to full chart width */
 .g-chart{flex:1;position:relative;overflow:hidden}
@@ -189,6 +214,22 @@ body::before{content:'';position:fixed;inset:0;
   font-size:10px;font-weight:700;white-space:nowrap;pointer-events:none;z-index:3;
   max-width:90px;overflow:hidden;text-overflow:ellipsis}
 
+/* TODAY / NOW line — draggable */
+.now-line-hit{position:absolute;top:0;bottom:0;width:18px;margin-left:-9px;z-index:9;cursor:ew-resize;
+  touch-action:none;display:flex;justify-content:center}
+.now-line-visual{width:2px;height:100%;border-radius:2px;pointer-events:none;
+  background:linear-gradient(180deg,var(--accent2),rgba(58,171,242,.3));transition:width .12s,box-shadow .12s}
+.now-line-hit:hover .now-line-visual,.now-line-hit.dragging .now-line-visual{width:3px}
+/* Floating date tooltip — fixed to the viewport (not the scroll area) so it
+   stays visible and follows the cursor while dragging, regardless of
+   vertical scroll position. */
+.now-line-floating-tip{position:fixed;transform:translate(-50%,0);background:var(--accent);color:#fff;
+  font-size:11px;font-weight:700;padding:4px 9px;border-radius:7px;white-space:nowrap;pointer-events:none;
+  z-index:1000;box-shadow:0 6px 16px rgba(0,0,0,.22)}
+.now-line-bar-badge{position:absolute;top:50%;left:0;transform:translate(-50%,-50%);font-size:9px;font-weight:800;
+  color:#fff;background:rgba(0,0,0,.62);padding:1px 5px;border-radius:8px;white-space:nowrap;
+  pointer-events:none;z-index:11;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+
 /* BOTTOM ROW */
 #bottom-row{flex-shrink:0;height:210px;display:flex;gap:6px}
 #target-card{width:25%;flex-shrink:0}
@@ -218,7 +259,7 @@ body::before{content:'';position:fixed;inset:0;
 .rep-overlay.show{display:block}
 .row-editor-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--glass-hdr);
   border:1px solid var(--glass-bdr);border-radius:16px;padding:16px;box-shadow:0 12px 48px rgba(0,0,0,.22);
-  z-index:600;width:420px;max-height:85vh;overflow-y:auto;display:flex;flex-direction:column;gap:11px;
+  z-index:600;width:min(420px,calc(100vw - 32px));max-height:85vh;overflow-y:auto;display:flex;flex-direction:column;gap:11px;
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .rep-header{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .rep-header-title-wrap{display:flex;align-items:center;justify-content:center;gap:6px;flex:1;min-width:0}
@@ -257,7 +298,7 @@ body::before{content:'';position:fixed;inset:0;
 .rep-add-bar:hover{background:var(--accent-lt);color:var(--accent);border-color:var(--accent)}
 
 /* DATE RANGE CALENDAR PICKER */
-.drp-popup{position:fixed;z-index:900;width:248px;background:var(--glass-hdr);border:1px solid var(--glass-bdr);
+.drp-popup{position:fixed;z-index:900;width:min(248px,calc(100vw - 24px));background:var(--glass-hdr);border:1px solid var(--glass-bdr);
   border-radius:14px;padding:12px;box-shadow:0 12px 36px rgba(0,0,0,.2);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   display:flex;flex-direction:column;gap:8px}
 .drp-hdr{display:flex;align-items:center;justify-content:space-between}
@@ -285,7 +326,7 @@ body::before{content:'';position:fixed;inset:0;
 .confirm-overlay{display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.25)}
 .confirm-overlay.show{display:flex;align-items:center;justify-content:center}
 .confirm-box{background:var(--glass-hdr);border:1px solid var(--glass-bdr);border-radius:16px;padding:24px;
-  box-shadow:0 16px 48px rgba(0,0,0,.22);width:300px;display:flex;flex-direction:column;gap:16px;
+  box-shadow:0 16px 48px rgba(0,0,0,.22);width:min(300px,calc(100vw - 32px));display:flex;flex-direction:column;gap:16px;
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .confirm-title{font-size:13px;font-weight:700;color:var(--hdr-title);text-align:center}
 .confirm-msg{font-size:12px;color:var(--text-sub);text-align:center;line-height:1.6}
@@ -400,6 +441,7 @@ body::before{content:'';position:fixed;inset:0;
 
       <div class="card-body">
         <div id="gantt-wrap">
+          <div class="gantt-fold-handle" id="gantt-fold-handle" title="Collapse project list"><span class="gfh-arrow">&#8249;</span></div>
           <!-- Fixed header: year nav on left, month+week on right -->
           <div id="gantt-fixed-hdr">
             <div id="gantt-fixed-hdr-label">
@@ -550,6 +592,51 @@ function dateToWeekPos(date,weeks){
   }
   return weeks.length-1;
 }
+/* Inverse of dateToWeekPos — turns a fractional week-position back into a
+   Date, used while dragging the Today line to find what date the cursor
+   is currently over. */
+function weekPosToDate(pos,weeks){
+  const last=weeks.length-1;
+  if(pos<=0)return new Date(weeks[0]);
+  if(pos>=last)return new Date(weeks[last]);
+  const i=Math.floor(pos),frac=pos-i;
+  return new Date(weeks[i].getTime()+frac*(weeks[i+1]-weeks[i]));
+}
+/* Measures how wide a build/project-name tag would render (capped to the
+   .gantt-build-tag max-width), so we can tell whether it would get clipped
+   off the left edge of the visible viewport. */
+function measureTagWidth(text){
+  const ctx=measureTagWidth._ctx||(measureTagWidth._ctx=document.createElement('canvas').getContext('2d'));
+  ctx.font='700 10px "Segoe UI","PingFang TC",sans-serif';
+  return Math.min(ctx.measureText(text).width,90);
+}
+/* Given a candidate scrollLeft, nudge it left a little if doing so is
+   needed to reveal a build/project-name tag that would otherwise get
+   clipped right at the visible edge — keeps the "leftmost" bar's label
+   from being hidden, e.g. in the default view. */
+function avoidLeftEdgeTagClip(candidate){
+  if(!showBuildName)return candidate;
+  const weeks=getWeeks();
+  let min=candidate;
+  const WINDOW=140; // only consider bars landing just past the candidate edge
+  function check(start,text){
+    const left=dateToWeekPos(start,weeks)*WEEK_W;
+    if(left>=candidate&&left<=candidate+WINDOW){
+      const need=left-measureTagWidth(text)-6-8;
+      if(need<min)min=need;
+    }
+  }
+  projects.forEach(proj=>{
+    let first=true;
+    proj.subgroups.forEach(sg=>{
+      if(!sg.bars.length)return;
+      if(first){check(new Date(Math.min(...sg.bars.map(b=>b.start))),proj.name);first=false;}
+      const earliest=sg.bars.reduce((a,b)=>a.start<b.start?a:b);
+      check(earliest.start,sg.name);
+    });
+  });
+  return Math.max(0,min);
+}
 function fmtDate(d){if(!d)return '';return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 /* Scroll the gantt area so that Jan 1 of `y` is at the left edge */
 function scrollToYear(y){
@@ -557,7 +644,7 @@ function scrollToYear(y){
   const jan1=new Date(y,0,1);
   const idx=dateToWeekIdx(jan1,weeks);
   const scrollArea=document.getElementById('gantt-scroll-area');
-  scrollArea.scrollLeft=Math.max(0,idx*WEEK_W-4);
+  scrollArea.scrollLeft=avoidLeftEdgeTagClip(Math.max(0,idx*WEEK_W-4));
   viewYear=y;
   document.getElementById('nav-label').textContent=y;
 }
@@ -568,7 +655,7 @@ function scrollToToday(){
   const idx=dateToWeekIdx(today,weeks);
   const scrollArea=document.getElementById('gantt-scroll-area');
   const visibleW=scrollArea.clientWidth-getLabelW();
-  scrollArea.scrollLeft=Math.max(0,idx*WEEK_W-visibleW/2);
+  scrollArea.scrollLeft=avoidLeftEdgeTagClip(Math.max(0,idx*WEEK_W-visibleW/2));
   viewYear=today.getFullYear();
   document.getElementById('nav-label').textContent=viewYear;
 }
@@ -644,16 +731,18 @@ function renderGantt(){
   addChart.style.width=totalW+'px';
   addRow.append(addLbl,addChart);rowsEl.appendChild(addRow);
 
-  /* NOW line — rendered into gantt-rows as a positioned overlay */
+  /* NOW line — rendered into gantt-rows as a draggable positioned overlay */
   // Remove old now line if any
-  const oldNow=rowsEl.querySelector('.now-line-overlay');
+  const oldNow=rowsEl.querySelector('.now-line-hit');
   if(oldNow)oldNow.remove();
   const nowOff=getNowOffset(weeks);
   if(nowOff>=0&&showTodayLine){
-    const nl=document.createElement('div');nl.className='now-line-overlay';
-    nl.style.cssText=`position:absolute;left:${getLabelW()+nowOff}px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--accent2),rgba(58,171,242,.3));z-index:8;pointer-events:none`;
+    const hit=document.createElement('div');hit.className='now-line-hit';
+    hit.style.left=(getLabelW()+nowOff)+'px';
+    const visual=document.createElement('div');visual.className='now-line-visual';hit.appendChild(visual);
     rowsEl.style.position='relative';
-    rowsEl.appendChild(nl);
+    rowsEl.appendChild(hit);
+    attachNowLineDrag(hit,weeks,totalW);
   }
 
   /* Mirror header scroll when scroll-area scrolls horizontally */
@@ -744,6 +833,7 @@ function buildBarEl(bar,color,weeks,totalW,onClick,buildName,opts){
   const prog=autoProgress(bar);
 
   const wrap=document.createElement('div');wrap.className='gantt-bar-wrap';wrap.style.cssText=`left:${left}px;width:${width}px`;
+  wrap.dataset.start=bar.start.getTime();wrap.dataset.end=bar.end.getTime();
 
   // Outside tag (before/left of bar) — only rendered when buildName is non-null
   if(buildName){
@@ -760,6 +850,74 @@ function buildBarEl(bar,color,weeks,totalW,onClick,buildName,opts){
   outer.append(track,fill,lbl);
   if(onClick)outer.addEventListener('click',onClick);
   wrap.appendChild(outer);return wrap;
+}
+
+/* ── Draggable Today/NOW line ──
+   Lets the user grab the vertical "today" line and slide it left/right to
+   preview a different date. While dragging, every bar's progress fill and
+   a small "NN%" badge update live (no full re-render, so it stays smooth);
+   on release the change is committed via a normal renderGantt(). */
+function attachNowLineDrag(hit,weeks,totalW){
+  const rowsEl=document.getElementById('gantt-rows');
+  let dragging=false,cache=null,floatTip=null,tipTop=0;
+  function buildCache(){
+    cache=[...rowsEl.querySelectorAll('.gantt-bar-wrap')].map(w=>({
+      s:+w.dataset.start,e:+w.dataset.end,
+      fill:w.querySelector('.gantt-bar-fill'),
+      width:parseFloat(w.style.width)||0,
+      el:w
+    }));
+  }
+  function liveUpdate(t){
+    if(!cache)return;
+    cache.forEach(c=>{
+      let prog=0;
+      if(t<=c.s)prog=0;else if(t>=c.e)prog=100;else prog=Math.round(((t-c.s)/(c.e-c.s))*100);
+      if(showProgress&&c.fill)c.fill.style.width=prog+'%';
+      let badge=c.el.querySelector('.now-line-bar-badge');
+      if(t>c.s&&t<c.e){
+        if(!badge){badge=document.createElement('div');badge.className='now-line-bar-badge';c.el.appendChild(badge);}
+        badge.textContent=prog+'%';
+        badge.style.left=(((t-c.s)/(c.e-c.s))*c.width)+'px';
+      }else if(badge){badge.remove();}
+    });
+  }
+  function moveTo(clientX){
+    const rect=rowsEl.getBoundingClientRect();
+    let x=clientX-rect.left-getLabelW();
+    x=Math.max(0,Math.min(x,totalW));
+    const d=weekPosToDate(x/WEEK_W,weeks);
+    d.setHours(0,0,0,0);
+    simulatedToday=d;
+    hit.style.left=(getLabelW()+x)+'px';
+    todayDateInput.value=fmtDate(d);
+    if(floatTip){
+      floatTip.textContent=fmtDate(d);
+      floatTip.style.left=clientX+'px';
+      floatTip.style.top=tipTop+'px';
+    }
+    liveUpdate(d.getTime());
+  }
+  function endDrag(){
+    if(!dragging)return;
+    dragging=false;hit.classList.remove('dragging');cache=null;
+    if(floatTip){floatTip.remove();floatTip=null;}
+    renderGantt(); // commit cleanly: re-syncs header highlight, scroll mirror, etc.
+  }
+  hit.addEventListener('pointerdown',e=>{
+    e.preventDefault();e.stopPropagation();
+    dragging=true;hit.classList.add('dragging');
+    try{hit.setPointerCapture(e.pointerId);}catch(err){}
+    // Pin the tooltip just below the fixed header (not at the cursor) so it
+    // never overlaps the per-row percentage badges while dragging.
+    tipTop=document.getElementById('gantt-fixed-hdr').getBoundingClientRect().bottom+8;
+    floatTip=document.createElement('div');floatTip.className='now-line-floating-tip';
+    document.body.appendChild(floatTip);
+    buildCache();moveTo(e.clientX);
+  });
+  hit.addEventListener('pointermove',e=>{if(dragging){e.preventDefault();moveTo(e.clientX);}});
+  hit.addEventListener('pointerup',endDrag);
+  hit.addEventListener('pointercancel',endDrag);
 }
 
 /* ── Small helpers ── */
@@ -990,10 +1148,13 @@ function openDateRangePicker(anchorEl,bar,onChange){
   renderDRP(pop);
   document.body.appendChild(pop);
 
+  const popW=pop.offsetWidth,popH=pop.offsetHeight;
   const rect=anchorEl.getBoundingClientRect();
   let top=rect.bottom+6,left=rect.left;
-  if(left+264>window.innerWidth)left=window.innerWidth-268;
-  if(top+340>window.innerHeight)top=rect.top-344;
+  if(left+popW>window.innerWidth-8)left=window.innerWidth-popW-8;
+  if(left<8)left=8;
+  if(top+popH>window.innerHeight-8)top=rect.top-popH-6;
+  if(top<8)top=8;
   pop.style.top=top+'px';pop.style.left=left+'px';
 
   setTimeout(()=>{document.addEventListener('mousedown',drpOutsideClick);},0);
@@ -1215,6 +1376,26 @@ document.getElementById('toggle-progress').addEventListener('change',function(){
 
 /* ═══ CLOSE POPUP ═══ */
 document.getElementById('rep-overlay').addEventListener('click',closeRowEditor);
+
+/* ═══ LABEL COLUMN FOLD ═══ */
+const ganttWrapEl=document.getElementById('gantt-wrap');
+const foldHandle=document.getElementById('gantt-fold-handle');
+const LW_EXPANDED=150;
+let lblCollapsed=false;
+function setLblCollapsed(v){
+  lblCollapsed=v;
+  document.documentElement.style.setProperty('--lw',v?'0px':LW_EXPANDED+'px');
+  ganttWrapEl.classList.toggle('lbl-collapsed',v);
+  foldHandle.title=v?'Expand project list':'Collapse project list';
+  // The today/NOW line's left offset is baked in as an inline px value at
+  // render time (getLabelW() + week offset). It doesn't auto-follow --lw,
+  // so without a re-render it stays stuck at the old offset and drifts out
+  // of alignment with the bars whenever the label column folds/unfolds.
+  renderGantt();
+}
+foldHandle.addEventListener('click',()=>setLblCollapsed(!lblCollapsed));
+// On small screens, start collapsed so the timeline has more room by default
+if(window.innerWidth<=640)setLblCollapsed(true);
 
 /* ═══ INIT ═══ */
 applyZoom();
