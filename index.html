@@ -760,16 +760,15 @@ function buildProjRow(proj,pi,weeks,totalW){
   const lbl=document.createElement('div');lbl.className='g-lbl';
   const colBtn=makeCollapse(proj.collapsed);
   colBtn.addEventListener('click',e=>{e.stopPropagation();proj.collapsed=!proj.collapsed;renderGantt();});
-  const name=makeRowName(proj.name,v=>proj.name=v);
   const editBtn=makeRowAct(pencilSvg(),'Edit Project');
   editBtn.addEventListener('click',e=>{e.stopPropagation();openProjectEditor(proj,pi);});
   const delBtn=makeRowAct(trashSvg(),'Delete','del');
   delBtn.addEventListener('click',e=>{e.stopPropagation();confirmDelete('Delete project "'+proj.name+'"?',()=>{projects.splice(pi,1);renderGantt();});});
-  lbl.append(colBtn,name,editBtn,delBtn);
 
   const chart=document.createElement('div');chart.className='g-chart';chart.style.width=totalW+'px';
   const layer=document.createElement('div');layer.className='gantt-bars-layer';
-  let firstProjBar=true;
+  let firstProjBar=true,firstBuildTagEl=null;
+  const insideLabelFor=sg=>showItemName?sg.name:null;
   proj.subgroups.forEach((sg)=>{
     if(!sg.bars.length)return;
     const minS=new Date(Math.min(...sg.bars.map(b=>b.start)));
@@ -778,13 +777,16 @@ function buildProjRow(proj,pi,weeks,totalW){
     const barColor=sg.color||proj.color;
     // Build Name outside tag: proj.name shown only once (leftmost bar) when toggle ON
     const outsideTag=showBuildName&&firstProjBar?proj.name:null;
-    if(firstProjBar)firstProjBar=false;
-    // Item Name on bar: sg.name (e.g. P0) when toggle ON
-    const insideLabel=showItemName?sg.name:null;
-    const el=buildBarEl(bar,barColor,weeks,totalW,()=>openRowEditor(sg,pi,proj.subgroups.indexOf(sg)),outsideTag,{baseLabel:insideLabel,isProjRow:true});
+    const el=buildBarEl(bar,barColor,weeks,totalW,()=>openRowEditor(sg,pi,proj.subgroups.indexOf(sg)),outsideTag,{baseLabel:insideLabelFor(sg)});
     el.style.height='calc(100% - 14px)';el.style.top='7px';
+    if(firstProjBar){firstBuildTagEl=el.querySelector('.gantt-build-tag');firstProjBar=false;}
     layer.appendChild(el);
   });
+  // Live-sync: typing the project name updates the visible build-tag on
+  // the bar immediately, without a full renderGantt (which would yank
+  // focus out of this contentEditable mid-keystroke).
+  const name=makeRowName(proj.name,v=>proj.name=v,v=>{if(firstBuildTagEl)firstBuildTagEl.textContent=v;});
+  lbl.append(colBtn,name,editBtn,delBtn);
   chart.appendChild(layer);
   row.append(lbl,chart);
   return row;
@@ -795,20 +797,24 @@ function buildSubRow(sg,proj,pi,si,weeks,totalW){
   const row=document.createElement('div');row.className='g-row sub-row';
 
   const lbl=document.createElement('div');lbl.className='g-lbl';
-  const name=makeRowName(sg.name,v=>sg.name=v);
-  name.style.paddingLeft='4px';
-  lbl.append(name);
 
   const chart=document.createElement('div');chart.className='g-chart';chart.style.width=totalW+'px';
   const layer=document.createElement('div');layer.className='gantt-bars-layer';
   const barColor=sg.color||proj.color;
-  let firstSubBar=true;
+  let firstSubBar=true,firstBuildTagEl=null;
   sg.bars.forEach(bar=>{
     const outsideTag=showBuildName&&firstSubBar?sg.name:null;
-    if(firstSubBar)firstSubBar=false;
     const insideLabel=showItemName?bar.label:null;
-    layer.appendChild(buildBarEl(bar,barColor,weeks,totalW,()=>openRowEditor(sg,pi,si),outsideTag,{baseLabel:insideLabel}));
+    const el=buildBarEl(bar,barColor,weeks,totalW,()=>openRowEditor(sg,pi,si),outsideTag,{baseLabel:insideLabel});
+    if(firstSubBar){firstBuildTagEl=el.querySelector('.gantt-build-tag');firstSubBar=false;}
+    layer.appendChild(el);
   });
+  // Live-sync: typing the build name updates the visible build-tag on the
+  // bar immediately, without a full renderGantt (which would yank focus
+  // out of this contentEditable mid-keystroke).
+  const name=makeRowName(sg.name,v=>sg.name=v,v=>{if(firstBuildTagEl)firstBuildTagEl.textContent=v;});
+  name.style.paddingLeft='4px';
+  lbl.append(name);
   chart.appendChild(layer);
   row.append(lbl,chart);
   return row;
@@ -919,9 +925,15 @@ function attachNowLineDrag(hit,weeks,totalW){
 }
 
 /* ── Small helpers ── */
-function makeRowName(val,onBlur){
+function makeRowName(val,onBlur,onInput){
   const s=document.createElement('span');s.className='row-name';s.contentEditable='true';s.textContent=val;
-  s.addEventListener('blur',()=>onBlur(s.textContent));return s;
+  // Live-sync while typing: update the bar's label text directly (no
+  // renderGantt — a full re-render would destroy this contentEditable
+  // node mid-keystroke and break the caret/IME composition).
+  if(onInput)s.addEventListener('input',()=>onInput(s.textContent));
+  s.addEventListener('blur',()=>{onBlur(s.textContent);renderGantt();});
+  s.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();s.blur();}});
+  return s;
 }
 function makeRowAct(svg,title,cls=''){
   const b=document.createElement('button');b.className='row-act'+(cls?' '+cls:'');b.title=title;b.innerHTML=svg;return b;
