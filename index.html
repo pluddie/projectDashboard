@@ -232,7 +232,20 @@ body::before{content:'';position:fixed;inset:0;
 #target-card{width:25%;flex-shrink:0}
 #updates-card{flex:1}
 #target-body{padding:10px 14px;flex:1;min-height:0;overflow:auto}
-#target-text{width:100%;min-height:60px;font-size:12px;color:var(--text);line-height:1.75;outline:none;border:none;background:transparent;resize:none;font-family:inherit}
+#target-text{width:100%;min-height:60px;font-size:12px;color:var(--text);line-height:1.75;outline:none;font-family:inherit}
+#target-text:empty::before{content:attr(data-placeholder);color:var(--text-muted)}
+#target-text ul{margin:0 0 0 16px;padding:0}
+#target-text li{margin:2px 0}
+/* Target toolbar — compact icon buttons that sit inline in the card header */
+.tgt-tool-btn{width:24px;height:24px;border-radius:6px;border:none;cursor:pointer;background:var(--accent-lt);color:var(--accent);
+  font-size:12px;font-family:inherit;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.tgt-tool-btn:hover{background:var(--accent-md)}
+.tgt-tool-btn.active{background:var(--accent);color:#fff}
+.tgt-color-wrap{position:relative;width:24px;height:24px;border-radius:6px;background:var(--accent-lt);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
+.tgt-color-wrap:hover{background:var(--accent-md)}
+.tgt-color-wrap input[type=color]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0}
+.tgt-color-swatch{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--accent);pointer-events:none;background:#3a5fe8}
 #updates-body{padding:6px 10px;flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:2px}
 .update-item{display:flex;align-items:center;gap:7px;padding:3px 4px;border-radius:6px;min-height:27px}
 .update-item:hover{background:var(--row-hover)}
@@ -462,9 +475,20 @@ body::before{content:'';position:fixed;inset:0;
 
     <div id="bottom-row">
       <div class="card" id="target-card">
-        <div class="card-hdr"><span class="card-title">Project Target</span></div>
+        <div class="card-hdr">
+          <span class="card-title">Project Target</span>
+          <div class="card-hdr-right" id="target-toolbar">
+            <button class="tgt-tool-btn" data-cmd="bold" title="Bold"><b>B</b></button>
+            <button class="tgt-tool-btn" data-cmd="italic" title="Italic"><i>I</i></button>
+            <button class="tgt-tool-btn" data-cmd="insertUnorderedList" title="Bullet list">&#8226;&#8211;</button>
+            <span class="tgt-color-wrap" title="Text color">
+              <input type="color" id="target-color-input" value="#3a5fe8">
+              <span class="tgt-color-swatch" id="target-color-swatch"></span>
+            </span>
+          </div>
+        </div>
         <div class="card-body" id="target-body">
-          <textarea id="target-text" placeholder="Describe the project objectives, success criteria, and key deliverables here. Click to edit…"></textarea>
+          <div id="target-text" contenteditable="true" data-placeholder="Describe the project objectives, success criteria, and key deliverables here. Click to edit…"></div>
         </div>
       </div>
       <div class="card" id="updates-card">
@@ -552,9 +576,9 @@ let projects=[
   ]}
 ];
 let updates=[
-  {id:newId(),status:'green',text:'Frontend development on track — all milestones met'},
-  {id:newId(),status:'yellow',text:'Backend API integration delayed by 1 week'},
-  {id:newId(),status:'red',text:'QA testing blocked due to missing test environment'},
+  {id:newId(),status:'green',text:'CTB build on schedule — all critical components received, assembly starts Monday'},
+  {id:newId(),status:'yellow',text:'EVT build slipped 1 week — connector tooling delayed at supplier'},
+  {id:newId(),status:'red',text:'DVT yield below target (62%) — root cause analysis in progress with ME/EE'},
 ];
 
 /* ═══ DATE HELPERS ═══ */
@@ -1386,6 +1410,39 @@ document.getElementById('toggle-progress').addEventListener('change',function(){
 
 /* ═══ CLOSE POPUP ═══ */
 document.getElementById('rep-overlay').addEventListener('click',closeRowEditor);
+
+/* ═══ PROJECT TARGET — rich text toolbar ═══ */
+(function(){
+  const targetText=document.getElementById('target-text');
+  const colorInput=document.getElementById('target-color-input');
+  const colorSwatch=document.getElementById('target-color-swatch');
+
+  document.querySelectorAll('.tgt-tool-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      targetText.focus();
+      document.execCommand(btn.dataset.cmd,false,null);
+      updateToolbarState();
+    });
+  });
+
+  colorInput.addEventListener('input',()=>{
+    colorSwatch.style.background=colorInput.value;
+    targetText.focus();
+    document.execCommand('foreColor',false,colorInput.value);
+  });
+
+  // Reflect bold/italic state of the current selection on the toolbar
+  function updateToolbarState(){
+    document.querySelectorAll('.tgt-tool-btn').forEach(btn=>{
+      const isList=btn.dataset.cmd==='insertUnorderedList';
+      const on=isList?document.queryCommandState('insertUnorderedList'):document.queryCommandState(btn.dataset.cmd);
+      btn.classList.toggle('active',!!on);
+    });
+  }
+  document.addEventListener('selectionchange',()=>{
+    if(document.activeElement===targetText)updateToolbarState();
+  });
+})();
 
 /* ═══ LABEL COLUMN FOLD ═══ */
 const ganttWrapEl=document.getElementById('gantt-wrap');
