@@ -581,6 +581,73 @@ let updates=[
   {id:newId(),status:'red',text:'DVT yield below target (62%) — root cause analysis in progress with ME/EE'},
 ];
 
+/* ═══ PERSISTENCE (localStorage) ═══
+   Auto-saves every change so refreshing the page (or re-opening the
+   exported file later) restores exactly where you left off — no need
+   to re-enter data. Dates are stored as ISO strings and revived back
+   into Date objects on load. */
+const STORAGE_KEY='projectDashboard.state.v1';
+let _saveTimer=null;
+function saveState(){
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(()=>{
+    try{
+      const targetEl=document.getElementById('target-text');
+      const state={
+        projects,updates,
+        targetHTML:targetEl?targetEl.innerHTML:'',
+        theme:document.documentElement.dataset.theme||'light',
+        WEEK_W,RH_PROJ,RH_SUB,showBuildName,showItemName,showTodayLine,showProgress,
+        simulatedToday:simulatedToday?simulatedToday.toISOString():null,
+        idCnt,
+        lblCollapsed:!!window.lblCollapsed,
+        savedAt:new Date().toISOString()
+      };
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+    }catch(err){console.warn('Save failed:',err);}
+  },300);
+}
+/* Recursively walk a plain object/array and turn any string that looks
+   like an ISO date (produced by JSON.stringify of a Date) back into a
+   real Date object — used for nested bar.start/bar.end inside projects. */
+function reviveDates(obj){
+  if(Array.isArray(obj))return obj.map(reviveDates);
+  if(obj&&typeof obj==='object'){
+    const out={};
+    for(const k in obj){
+      const v=obj[k];
+      if((k==='start'||k==='end')&&typeof v==='string')out[k]=new Date(v);
+      else out[k]=reviveDates(v);
+    }
+    return out;
+  }
+  return obj;
+}
+function loadState(){
+  let raw;
+  try{raw=localStorage.getItem(STORAGE_KEY);}catch(err){return false;}
+  if(!raw)return false;
+  try{
+    const s=JSON.parse(raw);
+    if(s.projects)projects=reviveDates(s.projects);
+    if(s.updates)updates=s.updates;
+    if(typeof s.WEEK_W==='number')WEEK_W=s.WEEK_W;
+    if(typeof s.RH_PROJ==='number')RH_PROJ=s.RH_PROJ;
+    if(typeof s.RH_SUB==='number')RH_SUB=s.RH_SUB;
+    if(typeof s.showBuildName==='boolean')showBuildName=s.showBuildName;
+    if(typeof s.showItemName==='boolean')showItemName=s.showItemName;
+    if(typeof s.showTodayLine==='boolean')showTodayLine=s.showTodayLine;
+    if(typeof s.showProgress==='boolean')showProgress=s.showProgress;
+    if(s.simulatedToday)simulatedToday=new Date(s.simulatedToday);
+    if(typeof s.idCnt==='number')idCnt=s.idCnt;
+    window._restoredTheme=s.theme||'light';
+    window._restoredTargetHTML=typeof s.targetHTML==='string'?s.targetHTML:null;
+    window._restoredLblCollapsed=!!s.lblCollapsed;
+    return true;
+  }catch(err){console.warn('Load failed, using defaults:',err);return false;}
+}
+loadState();
+
 /* ═══ DATE HELPERS ═══ */
 function getToday(){if(simulatedToday)return new Date(simulatedToday);const d=new Date();d.setHours(0,0,0,0);return d;}
 function getWeeks(){const w=[];let d=new Date(viewStart);while(d<=viewEnd){w.push(new Date(d));d.setDate(d.getDate()+7);}return w;}
@@ -704,6 +771,7 @@ function autoProgress(bar){
 
 /* ═══ GANTT RENDER ═══ */
 function renderGantt(){
+  saveState();
   const weeks=getWeeks();
   const mGroups=getMonthGroups(weeks);
   const totalW=weeks.length*WEEK_W;
@@ -1098,7 +1166,7 @@ function openRowEditor(owner,pi,si){
   const titleWrap=document.createElement('div');titleWrap.className='rep-header-title-wrap';
   const colorDot=document.createElement('div');colorDot.className='rep-title-color-dot';colorDot.style.background=owner.color||DEFAULT_COLOR;colorDot.title='Change color';
   const titleEl=document.createElement('span');titleEl.className='rep-header-title';titleEl.contentEditable='true';titleEl.id='rep-name';titleEl.textContent=owner.name||'';
-  titleEl.addEventListener('blur',()=>{owner.name=titleEl.textContent||owner.name;});
+  titleEl.addEventListener('blur',()=>{owner.name=titleEl.textContent||owner.name;saveState();});
   titleEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();titleEl.blur();}});
   titleWrap.append(colorDot,titleEl);
 
@@ -1317,13 +1385,14 @@ function addProject(){
 /* ═══ UPDATES ═══ */
 const STATUS_CYCLE={green:'yellow',yellow:'red',red:'green'};
 function renderUpdates(){
+  saveState();
   const body=document.getElementById('updates-body');body.innerHTML='';
   updates.forEach(u=>{
     const item=document.createElement('div');item.className='update-item';
     const light=document.createElement('div');light.className='status-light '+u.status;
-    light.addEventListener('click',()=>{u.status=STATUS_CYCLE[u.status];light.className='status-light '+u.status;});
+    light.addEventListener('click',()=>{u.status=STATUS_CYCLE[u.status];light.className='status-light '+u.status;saveState();});
     const txt=document.createElement('div');txt.className='update-text';txt.contentEditable='true';txt.textContent=u.text;
-    txt.addEventListener('blur',()=>u.text=txt.textContent);
+    txt.addEventListener('blur',()=>{u.text=txt.textContent;saveState();});
     txt.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addUpdate();}});
     const del=document.createElement('button');del.className='update-del';del.textContent='✕';
     del.addEventListener('click',()=>{updates=updates.filter(x=>x.id!==u.id);renderUpdates();});
@@ -1344,12 +1413,47 @@ document.getElementById('settings-btn').addEventListener('click',()=>{sidebar.cl
 function closeSidebar(){sidebar.classList.remove('open');sideOverlay.classList.remove('show');}
 document.getElementById('sidebar-close').addEventListener('click',closeSidebar);
 sideOverlay.addEventListener('click',closeSidebar);
-document.getElementById('theme-toggle').addEventListener('change',function(){document.documentElement.dataset.theme=this.checked?'dark':'light';});
+document.getElementById('theme-toggle').addEventListener('change',function(){document.documentElement.dataset.theme=this.checked?'dark':'light';saveState();});
 document.getElementById('export-btn').addEventListener('click',()=>{
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob(['<!DOCTYPE html>\n'+document.documentElement.outerHTML],{type:'text/html'}));
-  a.download='project-dashboard.html';a.click();URL.revokeObjectURL(a.href);
+  saveState(); // ensure latest edits are flushed before we read them back out
+  /* Export a CLEAN copy of the original page (not a frozen DOM snapshot —
+     that would bake in popups/inline-styles and, more importantly, would
+     NOT contain your edited data, since the live DOM's <script> text is
+     just the original source). Instead we take the page's original
+     source markup and swap the seed values for `projects` / `updates`
+     with the CURRENT live data, serialized as real JS literals (Date
+     objects become `new Date(...)` calls, not strings). The exported
+     file then opens already showing your edits, and continues
+     auto-saving its own further changes via localStorage from then on. */
+  fetch(window.location.href).then(r=>r.text()).then(html=>{
+    const projLit='let projects='+jsLiteral(projects)+';';
+    const updLit='let updates='+jsLiteral(updates)+';';
+    let out=html;
+    out=out.replace(/let projects=\[[\s\S]*?\n\];/,projLit);
+    out=out.replace(/let updates=\[[\s\S]*?\n\];/,updLit);
+    downloadHtml(out);
+  }).catch(()=>{
+    // Fallback (e.g. file opened via file:// where fetch of itself may be
+    // blocked): export the live DOM snapshot as before.
+    downloadHtml('<!DOCTYPE html>\n'+document.documentElement.outerHTML);
+  });
 });
+/* Like JSON.stringify, but Date instances become `new Date(...)` source
+   text instead of quoted ISO strings, so the result is valid executable
+   JS (not just JSON data) that reconstructs real Date objects on load. */
+function jsLiteral(val){
+  if(val instanceof Date)return 'new Date('+val.getTime()+')';
+  if(Array.isArray(val))return '['+val.map(jsLiteral).join(',')+']';
+  if(val&&typeof val==='object'){
+    return '{'+Object.keys(val).map(k=>JSON.stringify(k)+':'+jsLiteral(val[k])).join(',')+'}';
+  }
+  return JSON.stringify(val);
+}
+function downloadHtml(htmlStr){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([htmlStr],{type:'text/html'}));
+  a.download='project-dashboard.html';a.click();URL.revokeObjectURL(a.href);
+}
 const todayDateInput=document.getElementById('today-date-input');
 function refreshTodayInput(){todayDateInput.value=fmtDate(getToday());}
 refreshTodayInput();
@@ -1417,11 +1521,20 @@ document.getElementById('rep-overlay').addEventListener('click',closeRowEditor);
   const colorInput=document.getElementById('target-color-input');
   const colorSwatch=document.getElementById('target-color-swatch');
 
+  // Restore previously-saved rich text content, if any (falls back to the
+  // placeholder text already in the markup otherwise).
+  if(typeof window._restoredTargetHTML==='string'&&window._restoredTargetHTML){
+    targetText.innerHTML=window._restoredTargetHTML;
+  }
+  targetText.addEventListener('input',saveState);
+  targetText.addEventListener('blur',saveState);
+
   document.querySelectorAll('.tgt-tool-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
       targetText.focus();
       document.execCommand(btn.dataset.cmd,false,null);
       updateToolbarState();
+      saveState();
     });
   });
 
@@ -1429,6 +1542,7 @@ document.getElementById('rep-overlay').addEventListener('click',closeRowEditor);
     colorSwatch.style.background=colorInput.value;
     targetText.focus();
     document.execCommand('foreColor',false,colorInput.value);
+    saveState();
   });
 
   // Reflect bold/italic state of the current selection on the toolbar
@@ -1462,12 +1576,30 @@ function setLblCollapsed(v){
 }
 foldHandle.addEventListener('click',()=>setLblCollapsed(!window.lblCollapsed));
 // On small screens, start collapsed so the timeline has more room by default
-if(window.innerWidth<=640)setLblCollapsed(true);
+// (skip this default if a saved preference will be restored in INIT below)
+if(window.innerWidth<=640&&!window._restoredLblCollapsed)setLblCollapsed(true);
 
 /* ═══ INIT ═══ */
+// Reflect any restored saved state onto the UI controls themselves
+// (the variables were already restored by loadState() above; this just
+// makes the checkboxes/sliders/theme switch match what was loaded).
+(function syncRestoredUI(){
+  const theme=window._restoredTheme||'light';
+  document.documentElement.dataset.theme=theme;
+  document.getElementById('theme-toggle').checked=(theme==='dark');
+  document.getElementById('toggle-build-name').checked=showBuildName;
+  document.getElementById('toggle-item-name').checked=showItemName;
+  document.getElementById('toggle-today-line').checked=showTodayLine;
+  document.getElementById('toggle-progress').checked=showProgress;
+  document.getElementById('zoom-h').value=WEEK_W;
+  document.getElementById('zoom-h-val').textContent=WEEK_W;
+  document.getElementById('zoom-v').value=RH_PROJ;
+  document.getElementById('zoom-v-val').textContent=RH_PROJ;
+})();
 applyZoom();
 renderGantt();
 renderUpdates();
+if(window._restoredLblCollapsed)setLblCollapsed(true);
 // Default view: show January of the base year, left-aligned, so the
 // project list starts right at the beginning of the timeline.
 scrollToYear(BASE_YEAR);
