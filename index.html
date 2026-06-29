@@ -1416,27 +1416,36 @@ sideOverlay.addEventListener('click',closeSidebar);
 document.getElementById('theme-toggle').addEventListener('change',function(){document.documentElement.dataset.theme=this.checked?'dark':'light';saveState();});
 document.getElementById('export-btn').addEventListener('click',()=>{
   saveState(); // ensure latest edits are flushed before we read them back out
-  /* Export a CLEAN copy of the original page (not a frozen DOM snapshot —
-     that would bake in popups/inline-styles and, more importantly, would
-     NOT contain your edited data, since the live DOM's <script> text is
-     just the original source). Instead we take the page's original
-     source markup and swap the seed values for `projects` / `updates`
-     with the CURRENT live data, serialized as real JS literals (Date
-     objects become `new Date(...)` calls, not strings). The exported
-     file then opens already showing your edits, and continues
-     auto-saving its own further changes via localStorage from then on. */
-  fetch(window.location.href).then(r=>r.text()).then(html=>{
-    const projLit='let projects='+jsLiteral(projects)+';';
-    const updLit='let updates='+jsLiteral(updates)+';';
-    let out=html;
-    out=out.replace(/let projects=\[[\s\S]*?\n\];/,projLit);
-    out=out.replace(/let updates=\[[\s\S]*?\n\];/,updLit);
-    downloadHtml(out);
-  }).catch(()=>{
-    // Fallback (e.g. file opened via file:// where fetch of itself may be
-    // blocked): export the live DOM snapshot as before.
-    downloadHtml('<!DOCTYPE html>\n'+document.documentElement.outerHTML);
-  });
+  /* Build the export from a CLEANED CLONE of the live document — not a
+     fetch() of the page's own URL. fetch() of file:// is unreliable
+     (blocked by CORS in most browsers when double-clicking a local
+     file), and a raw outerHTML snapshot would freeze whatever UI state
+     happens to be open right now — including the sidebar itself, since
+     that's literally where this button lives. So: clone, force-close
+     every overlay/popup in the clone, inject the current data as real
+     JS literals into the clone's <script> text, then serialize that. */
+  const clone=document.documentElement.cloneNode(true);
+  // Force-close sidebar + all overlays/popups in the clone only
+  // (the live page is untouched, so nothing visibly changes for the user)
+  const closeSel=id=>{const el=clone.querySelector('#'+id);if(el)el.classList.remove('open','show');};
+  closeSel('sidebar');closeSel('sidebar-overlay');closeSel('rep-overlay');closeSel('confirm-overlay');
+  const hideSel=id=>{const el=clone.querySelector('#'+id);if(el)el.style.display='none';};
+  hideSel('row-editor-popup');hideSel('gantt-settings-panel');
+  // Dynamically-created popups (date picker, color wheel) aren't in the
+  // original markup at all — drop them if a stray one got cloned in.
+  clone.querySelectorAll('#date-range-picker').forEach(el=>el.remove());
+
+  // Re-inject current live data into the clone's script text, as real JS
+  // literals (Date objects become `new Date(...)` calls, not strings),
+  // so the file opens already showing your edits and keeps auto-saving
+  // its own further changes via localStorage from then on.
+  const scriptEl=clone.querySelector('script');
+  let js=scriptEl.textContent;
+  js=js.replace(/let projects=\[[\s\S]*?\n\];/,'let projects='+jsLiteral(projects)+';');
+  js=js.replace(/let updates=\[[\s\S]*?\n\];/,'let updates='+jsLiteral(updates)+';');
+  scriptEl.textContent=js;
+
+  downloadHtml('<!DOCTYPE html>\n'+clone.outerHTML);
 });
 /* Like JSON.stringify, but Date instances become `new Date(...)` source
    text instead of quoted ISO strings, so the result is valid executable
