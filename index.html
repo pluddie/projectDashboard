@@ -1,1275 +1,1520 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>小女孩和花花獅拍貼機</title>
-
-<!-- iOS「加到主畫面」全螢幕設定 -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="拍貼機">
-<link rel="apple-touch-icon" href="icon-180.png">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#241712">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Dashboard</title>
 <style>
-  :root{
-    --bg:#241712;
-    --surface:#33231C;
-    --ink:#FBEEE3;
-    --muted:#A98770;
-    --accent:#FF9248;
-    --accent-soft:#4A2E1C;
-    --accent2:#FFB066;
-    --accent2-soft:#3D2A1C;
-    --line:#4A372C;
-    --surface-translucent:rgba(51,35,28,0.85); /* 深色版replace-btn等半透明背景用 */
-    --font:'Nunito','Zen Maru Gothic',sans-serif;
-    --edge-pad:36px; /* 全站統一的上下安全間距，header 頂部與 footer 底部都用這個值 */
-    --photo-ratio:100/148; /* 相紙比例：4×6明信片 100×148mm，直式 */
-  }
+:root{
+  --bg:#D8E8FA;
+  --glass:rgba(255,255,255,.76);--glass-hdr:rgba(255,255,255,.93);--glass-bdr:rgba(255,255,255,.85);--page-hdr:rgba(255,255,255,.88);
+  --text:#1a2540;--text-sub:#3a5080;--text-muted:#6a88b8;
+  --accent:#3A5FE8;--accent2:#3AABF2;--accent-lt:rgba(58,95,232,.09);--accent-md:rgba(58,95,232,.17);
+  --divider:rgba(58,95,232,.10);--hdr-title:#1a3070;--row-even:rgba(58,95,232,.03);--row-hover:rgba(58,95,232,.065);
+  --row-solid-proj:#eef2fc;--row-solid-sub:#f7f9fd;
+  --lw:150px; /* label column width */
+  --rh-proj:36px; --rh-sub:30px; /* row heights, updated by JS */
+}
+[data-theme="dark"]{
+  --bg:#0b1222;
+  --glass:rgba(14,22,48,.62);--glass-hdr:rgba(14,22,48,.88);--glass-bdr:rgba(255,255,255,.09);--page-hdr:rgba(10,18,40,.82);
+  --text:#ddeaff;--text-sub:#7ea4d4;--text-muted:#4e6e9a;
+  --accent:#5b83ff;--accent2:#3AABF2;--accent-lt:rgba(91,131,255,.13);--accent-md:rgba(91,131,255,.24);
+  --divider:rgba(91,131,255,.12);--hdr-title:#8ab0ff;--row-even:rgba(91,131,255,.04);--row-hover:rgba(91,131,255,.09);
+  --row-solid-proj:#152040;--row-solid-sub:#101a34;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI','PingFang TC',sans-serif;font-size:13px;color:var(--text)}
+body{background:var(--bg);position:relative}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 18% 28%,rgba(58,95,232,.18) 0%,transparent 58%),
+             radial-gradient(ellipse at 82% 72%,rgba(58,171,242,.15) 0%,transparent 55%);
+  pointer-events:none;z-index:0}
 
-  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
-  html,body{
-    width:100%; height:100%;
-    background:var(--bg);
-    overflow:hidden;
-    font-family:var(--font);
-    color:var(--ink);
-    -webkit-user-select:none; user-select:none;
-  }
+#app{position:relative;z-index:1;width:100vw;height:100vh;display:flex;flex-direction:column;padding:11px;gap:6px;overflow:hidden}
 
-  #app{
-    position:fixed; inset:0;
-    height:100vh; height:100dvh;
-    background:var(--bg);
-    display:flex;
-    justify-content:center;
-  }
+/* PAGE HEADER */
+#page-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:44px;
+  background:var(--page-hdr);backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6);
+  border:1px solid var(--glass-bdr);border-radius:14px;box-shadow:0 2px 16px rgba(58,95,232,.08)}
+#page-title{font-size:18px;font-weight:800;background:linear-gradient(90deg,var(--accent) 0%,var(--accent2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.02em;outline:none}
+.hdr-btns{display:flex;gap:5px;align-items:center}
+.hdr-btn{height:30px;padding:0 11px;border-radius:8px;border:none;cursor:pointer;background:var(--accent-lt);color:var(--accent);
+  font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px;transition:background .15s;white-space:nowrap}
+.hdr-btn:hover{background:var(--accent-md)}
+.hdr-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 
-  /* 響應式外框：全螢幕填滿，不限制寬度 */
-  #app-shell{
-    width:100%;
-    height:100%;
-    position:relative;
-    overflow:hidden;
-    display:flex; flex-direction:column;
-  }
+/* GLASS CARD */
+.card{background:var(--glass);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
+  border:1px solid var(--glass-bdr);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 4px 24px rgba(58,95,232,.07),0 1px 4px rgba(0,0,0,.04)}
+.card-hdr{flex-shrink:0;display:flex;align-items:center;padding:5px 12px;gap:8px;
+  background:var(--glass-hdr);border-bottom:1px solid var(--divider)}
+.card-title{font-size:12px;font-weight:700;color:var(--hdr-title);letter-spacing:.05em;text-transform:uppercase;flex-shrink:0}
+.card-hdr-right{display:flex;gap:4px;align-items:center;margin-left:auto;flex-shrink:0}
+.card-btn{height:24px;padding:0 8px;border-radius:6px;border:none;cursor:pointer;background:var(--accent-lt);color:var(--accent);
+  font-size:11px;font-weight:600;display:flex;align-items:center;gap:3px;transition:background .15s;white-space:nowrap}
+.card-btn:hover{background:var(--accent-md)}
+.card-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.card-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
 
-  /* ── Copyright footer ── */
-  #copyright-footer{
-    flex-shrink:0;
-    text-align:center;
-    padding:6px 0 max(8px, env(safe-area-inset-bottom));
-    font-family:var(--font);
-    font-size:11px;
-    font-weight:700;
-    letter-spacing:.14em;
-    color:var(--muted);
-    background:var(--bg);
-    z-index:100;
-  }
+/* Gantt settings dropdown panel */
+.gantt-settings-panel{position:absolute;top:46px;right:11px;z-index:120;width:min(230px,calc(100vw - 22px));
+  background:var(--glass-hdr);border:1px solid var(--glass-bdr);border-radius:12px;padding:12px;
+  box-shadow:0 10px 32px rgba(0,0,0,.16);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  display:flex;flex-direction:column;gap:10px}
+.gsp-row{display:flex;align-items:center;gap:8px}
+.gsp-label{font-size:11px;font-weight:600;color:var(--text-sub);flex:1;display:flex;flex-direction:column;line-height:1.3}
+.gsp-hint{font-size:9px;font-weight:500;color:var(--text-muted)}
+.gsp-divider{height:1px;background:var(--divider);margin:0}
+.gsp-toggle-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.gsp-toggle{position:relative;width:34px;height:19px;flex-shrink:0}
+.gsp-toggle input{opacity:0;width:0;height:0}
+.gsp-toggle-slider{position:absolute;inset:0;border-radius:10px;background:#c5d5e8;cursor:pointer;transition:.2s}
+.gsp-toggle-slider::before{content:'';position:absolute;left:2px;bottom:2px;width:15px;height:15px;border-radius:50%;
+  background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.gsp-toggle input:checked+.gsp-toggle-slider{background:var(--accent)}
+.gsp-toggle input:checked+.gsp-toggle-slider::before{transform:translateX(15px)}
+[data-theme="dark"] .gsp-toggle-slider{background:#2a3550}
+.zoom-slider{width:64px;height:3px;accent-color:var(--accent);cursor:pointer;border:none;outline:none}
+.zoom-val{font-size:10px;font-weight:700;color:var(--accent);min-width:24px;text-align:right}
+.gsp-date-input{flex-shrink:0;width:118px;margin-left:auto;padding:4px 8px;border-radius:6px;border:1px solid var(--divider);background:var(--glass);
+  color:var(--text);font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;outline:none;text-align:right;
+  transition:border-color .15s,background .15s}
+.gsp-date-input:hover{border-color:var(--accent)}
+.gsp-date-input:focus{border-color:var(--accent);background:var(--accent-lt)}
 
-  #screens{ flex:1; position:relative; overflow:hidden; }
+/* MAIN */
+#main-content{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+#gantt-card{flex:1;min-height:0;position:relative}
 
-  .screen{
-    position:absolute; inset:0;
-    display:flex; flex-direction:column;
-    opacity:0; visibility:hidden;
-    transition:opacity .4s ease;
-    pointer-events:none;
-    background:var(--bg);
-  }
-  .screen.active{ opacity:1; visibility:visible; pointer-events:auto; }
+/* ═══════════════════════════════════════════════════
+   GANTT LAYOUT — single scroll container approach
+   
+   Structure:
+     #gantt-card > .card-body > #gantt-wrap
+       #gantt-fixed-hdr   ← sticky, never scrolls (year-nav + month/week header)
+       #gantt-scroll-area ← scrolls both X and Y
+         #gantt-rows      ← all rows, each row has label+chart side by side
+   ═══════════════════════════════════════════════════ */
 
-  /* ── 共用按鈕 ── */
-  .btn{
-    font-family:var(--font);
-    font-weight:800;
-    font-size:20px;
-    border-radius:50px;
-    padding:18px 0;
-    flex:1;
-    border:none;
-    transition:transform .15s, opacity .2s;
-    cursor:pointer;
-  }
-  .btn:active{ transform:scale(.97); }
-  .btn-outline{
-    background:var(--surface);
-    color:var(--ink);
-    border:2.5px solid var(--ink);
-  }
-  .btn-fill{
-    background:var(--accent);
-    color:#fff;
-  }
-  .btn-fill:disabled{ opacity:.35; }
+#gantt-wrap{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;position:relative}
 
-  /* 桌面版：各頁面內容置中，背景仍全螢幕填滿 */
-  .page-header,
-  .frames-body,
-  .layout-options,
-  .cam-content,
-  .printing-inner,
-  .page-footer{
-    max-width:720px;
-    margin-left:auto;
-    margin-right:auto;
-    width:100%;
-    box-sizing:border-box;
-  }
-  .ratio-box{
-    aspect-ratio:var(--photo-ratio);
-    border-radius:20px;
-    overflow:hidden;
-    position:relative;
-    background:var(--surface);
-  }
+/* Fold handle — sits on the seam between the label column and the chart;
+   the arrow is hidden by default (keeps screenshots/reports clean) and
+   only fades in on hover over the seam. Click collapses/expands the label
+   column so the timeline gets more horizontal room. */
+.gantt-fold-handle{position:absolute;top:0;bottom:0;left:var(--lw);width:18px;margin-left:-9px;z-index:55;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:left .22s ease}
+/* When collapsed, --lw is 0 — centering the handle on the seam would push
+   half of it past the container's left edge and get clipped by
+   #gantt-wrap's overflow:hidden. Pull it fully inside instead. */
+#gantt-wrap.lbl-collapsed .gantt-fold-handle{left:0;margin-left:0;width:20px}
+.gfh-arrow{width:20px;height:20px;border-radius:50%;background:var(--accent-lt);color:var(--accent);
+  border:1px solid var(--glass-bdr);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;line-height:1;
+  opacity:0;transition:opacity .15s,background .15s,transform .2s,border-color .15s;box-shadow:0 2px 8px rgba(0,0,0,.14)}
+.gantt-fold-handle:hover .gfh-arrow{opacity:1;background:var(--accent-md);border-color:var(--accent)}
+#gantt-wrap.lbl-collapsed .gfh-arrow{transform:rotate(180deg)}
 
-  /* ===================== 1. 歡迎頁 ===================== */
-  #screen-welcome{
-    align-items:center; justify-content:space-between;
-    text-align:center;
-    padding:52px 28px 44px;
-    background:
-      radial-gradient(circle at 18% 12%, var(--accent-soft) 0%, transparent 45%),
-      radial-gradient(circle at 85% 78%, var(--accent2-soft) 0%, transparent 45%),
-      var(--bg);
-    cursor:pointer;
-  }
-  .welcome-deco-top{ display:flex; gap:14px; }
-  .welcome-deco-top svg{ width:36px; height:36px; }
-  .welcome-mid{ display:flex; flex-direction:column; align-items:center; gap:28px; }
-  .mascot-emoji{
-    font-size:120px; line-height:1;
-    display:flex; align-items:center;
-    filter:drop-shadow(0 8px 16px #00000014);
-  }
-  .mascot-emoji .emoji-gap{ margin-left:8px; }
-  .brand-title{
-    font-family:var(--font);
-    font-weight:900;
-    font-size:52px;
-    line-height:1.4;
-    color:var(--ink);
-    letter-spacing:.04em;
-  }
-  .brand-sub{
-    font-family:var(--font);
-    font-weight:800;
-    font-size:32px;
-    letter-spacing:.24em;
-    color:var(--accent);
-    margin-top:14px;
-  }
-  .press-start{
-    font-family:var(--font);
-    font-weight:900;
-    font-size:22px;
-    letter-spacing:.2em;
-    color:#fff;
-    background:var(--accent);
-    border:none;
-    border-radius:50px;
-    padding:22px 52px;
-    animation:pulseScale 1.8s ease-in-out infinite;
-    box-shadow:0 8px 24px -6px #FF924855;
-    cursor:pointer;
-  }
-  @keyframes pulseScale{
-    0%,100%{ transform:scale(1); }
-    50%{ transform:scale(1.045); }
-  }
+/* Fixed header — sits above scroll area, never moves */
+#gantt-fixed-hdr{flex-shrink:0;display:flex;background:var(--glass-hdr);border-bottom:1px solid var(--divider);z-index:10}
+#gantt-fixed-hdr-label{width:var(--lw);min-width:var(--lw);flex-shrink:0;display:flex;align-items:center;
+  padding:0 10px;border-right:1px solid var(--divider);overflow:hidden;
+  transition:width .22s ease,min-width .22s ease,padding .22s ease,border-color .22s ease}
+#gantt-wrap.lbl-collapsed #gantt-fixed-hdr-label{padding:0;border-right-color:transparent}
+.year-nav{display:flex;align-items:center;gap:4px;width:100%}
+.year-nav-btn{width:22px;height:22px;border-radius:6px;border:none;cursor:pointer;background:var(--accent-lt);color:var(--accent);
+  font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.year-nav-btn:hover{background:var(--accent-md)}
+.year-nav-label{flex:1;text-align:center;font-size:11px;font-weight:700;color:var(--hdr-title)}
+/* chart header sits in same fixed row, scrolls only X via JS mirror */
+#gantt-fixed-hdr-chart{flex:1;overflow:hidden} /* no scroll — JS mirrors the X */
+#gantt-chart-hdr-inner{display:flex;flex-direction:column;width:max-content}
+.gantt-hdr-months{display:flex}
+.month-group{display:flex;flex-direction:column}
+.month-label{padding:2px 6px;font-size:11px;font-weight:700;color:var(--accent);border-bottom:1px solid var(--divider);
+  text-align:center;background:linear-gradient(90deg,rgba(58,95,232,.07),rgba(58,171,242,.07));white-space:nowrap;overflow:hidden}
+.week-labels{display:flex}
+.week-cell{font-size:8.5px;color:var(--text-muted);text-align:center;font-weight:600;line-height:1.8;flex-shrink:0}
+.week-cell.today-wk{color:var(--accent);font-weight:800;background:var(--accent-lt)}
 
-  /* ===================== 2. 選擇相框 ===================== */
-  #screen-frames{
-    display:flex; flex-direction:column;
-    padding:0;
-  }
+/* Scrollable body — both X and Y */
+#gantt-scroll-area{flex:1;min-height:0;overflow:auto}
+#gantt-scroll-area::-webkit-scrollbar{width:5px;height:5px}
+#gantt-scroll-area::-webkit-scrollbar-thumb{background:var(--accent-lt);border-radius:4px}
 
-  /* 固定標題區：外層只負責頂部安全間距，內層才是實際標題列（高度固定、無額外padding，
-     確保「絕對定位置中」的返回鈕跟「flex置中」的標題用同一個基準點，才會真正對齊） */
-  .page-header{
-    flex-shrink:0;
-    padding-top:max(var(--edge-pad), env(safe-area-inset-top));
-    background:var(--bg);
-  }
-  .page-header-row{
-    position:relative;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    height:64px;
-    padding:0 16px;
-  }
-  .btn-back{
-    position:absolute; left:12px; top:50%; transform:translateY(-50%);
-    display:flex; align-items:center; gap:4px;
-    font-family:var(--font);
-    font-weight:800;
-    font-size:18px;
-    color:var(--ink);
-    background:none;
-    border:none;
-    cursor:pointer;
-    padding:8px 12px 8px 6px;
-    border-radius:50px;
-    transition:background .15s;
-    white-space:nowrap;
-    z-index:2;
-  }
-  .btn-back:active{ background:var(--line); }
-  .btn-back svg{ width:22px; height:22px; flex-shrink:0; }
-  .page-title{
-    font-family:var(--font);
-    font-weight:900;
-    font-size:30px;
-    color:var(--ink);
-    letter-spacing:.04em;
-    text-align:center;
-    pointer-events:none;
-  }
+/* Each gantt row = label cell + chart cell, side by side */
+#gantt-rows{display:flex;flex-direction:column;width:max-content;min-width:100%}
+.g-row{display:flex;flex-direction:row;border-bottom:1px solid var(--divider)}
+.g-row.proj-row{background:var(--row-even);height:var(--rh-proj)}
+.g-row.sub-row{height:var(--rh-sub)}
+.g-row.add-row{height:var(--rh-sub)}
+.g-row:hover{background:var(--row-hover)}
+.g-row.proj-row:hover{background:var(--row-even)} /* keep project bg on hover */
+.g-row.collapsed-hidden{display:none}
 
-  .frames-body{
-    flex:1;
-    display:flex;
-    min-height:0;
-    overflow:hidden;
-  }
-  .frames-scroll{
-    flex:1;
-    overflow-y:auto;
-    -webkit-overflow-scrolling:touch;
-    padding:14px 16px 16px;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
-    align-content:start;
-    scrollbar-width:none;
-  }
-  .frames-scroll::-webkit-scrollbar{ display:none; }
-  .scroll-hint{
-    flex-shrink:0;
-    width:40px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:14px;
-    padding:16px 0;
-    color:var(--muted);
-  }
-  .scroll-hint-arrow{ width:22px; height:14px; flex-shrink:0; }
-  .scroll-hint-text{
-    writing-mode:vertical-rl;
-    text-orientation:mixed;
-    font-family:var(--font);
-    font-weight:700;
-    font-size:17px;
-    letter-spacing:.15em;
-    white-space:nowrap;
-  }
-  .frame-slot{
-    width:100%;
-    aspect-ratio:var(--photo-ratio);
-    position:relative;
-    border-radius:16px;
-    border:2px dashed var(--line);
-    background:var(--surface);
-    box-shadow:0 4px 14px -6px #00000040;
-    transition:border-color .25s, background .25s, transform .15s;
-    overflow:hidden;
-  }
-  .frame-slot:active{ transform:scale(.97); }
-  .frame-slot.selected{ border:2.5px solid var(--accent); background:var(--accent-soft); }
-  .frame-slot.has-image{ border-style:solid; border-color:var(--line); }
-  .frame-slot.has-image.selected{ border-color:var(--accent); }
-  .frame-slot > *:not(input){ position:absolute; inset:0; }
-  .frame-slot img{ width:100%; height:100%; object-fit:cover; display:block; }
-  .slot-inner{ display:flex; align-items:center; justify-content:center; }
-  .plus-icon{ width:30px; height:30px; color:var(--muted); }
-  .sel-badge{
-    position:absolute; top:8px; left:8px; bottom:auto; right:auto;
-    width:26px; height:26px; border-radius:50%;
-    background:var(--accent);
-    display:flex; align-items:center; justify-content:center;
-    opacity:0; transform:scale(.6);
-    transition:opacity .2s, transform .2s;
-    z-index:3;
-    box-shadow:0 2px 8px #00000040;
-  }
-  .frame-slot.selected .sel-badge{ opacity:1; transform:scale(1); }
-  .sel-badge svg{ width:14px; height:14px; }
-  .replace-btn{
-    position:absolute; top:8px; left:8px;
-    width:28px; height:28px; border-radius:50%;
-    background:var(--surface-translucent);
-    backdrop-filter:blur(2px);
-    -webkit-backdrop-filter:blur(2px);
-    border:1px solid var(--line);
-    display:flex; align-items:center; justify-content:center;
-    z-index:2;
-  }
-  .replace-btn svg{ width:14px; height:14px; color:var(--ink); }
+/* label cell — fixed width, doesn't scroll horizontally */
+.g-lbl{width:var(--lw);min-width:var(--lw);flex-shrink:0;display:flex;align-items:center;gap:4px;
+  padding:0 7px;border-right:1px solid var(--divider);overflow:hidden;
+  position:sticky;left:0;z-index:20;background:var(--glass-hdr);
+  transition:width .22s ease,min-width .22s ease,padding .22s ease,border-color .22s ease}
+.g-row.proj-row .g-lbl{background:var(--row-solid-proj)}
+.g-row.sub-row .g-lbl{padding-left:10px;background:var(--row-solid-sub)}
+.g-row.add-row .g-lbl{background:var(--row-solid-sub)}
+/* override hover on label cell to match row */
+.g-row:hover .g-lbl{background:var(--row-solid-sub)}
+.g-row.proj-row:hover .g-lbl{background:var(--row-solid-proj)}
+/* fully collapsed: kill padding + border so the column truly shrinks to a hairline */
+#gantt-wrap.lbl-collapsed .g-lbl,#gantt-wrap.lbl-collapsed .g-row.sub-row .g-lbl{padding:0;border-right-color:transparent}
 
-  /* 固定底部按鈕 */
-  .page-footer{
-    flex-shrink:0;
-    display:flex; gap:14px;
-    padding:14px 20px max(var(--edge-pad), env(safe-area-inset-bottom));
-    background:var(--bg);
-  }
+/* chart cell — expands to full chart width */
+.g-chart{flex:1;position:relative;overflow:hidden}
 
-  /* ===================== 2b. 選擇排版 ===================== */
-  #screen-layout{
-    display:flex; flex-direction:column;
-  }
-  .layout-options{
-    flex:1;
-    display:flex; flex-direction:column;
-    justify-content:center;
-    gap:16px;
-    padding:20px 24px;
-    overflow-y:auto;
-    min-height:0;
-  }
-  .layout-option{
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
-    width:100%;
-    flex:1;
-    padding:20px 16px;
-    border-radius:24px;
-    border:2px solid var(--line);
-    background:var(--surface);
-    cursor:pointer;
-    text-align:center;
-    font-family:var(--font);
-    transition:border-color .2s, background .2s, transform .15s;
-    min-height:0;
-  }
-  .layout-option:active{ transform:scale(.98); }
-  .layout-option.selected{ border:2.5px solid var(--accent); background:var(--accent-soft); }
-  .layout-preview{
-    flex-shrink:0;
-    width:56px;
-    aspect-ratio:var(--photo-ratio);
-    display:grid; gap:3px;
-    padding:4px;
-    border-radius:10px;
-    background:var(--line);
-  }
-  .layout-preview span{ background:var(--surface); border-radius:2px; }
-  .layout-preview-2x2{ grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; }
-  .layout-preview-2x3{ grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr 1fr; }
-  .layout-option-text{ display:flex; flex-direction:column; gap:5px; }
-  .layout-option-title{
-    font-weight:900; font-size:22px; color:var(--ink);
-  }
-  .layout-option-desc{
-    font-weight:700; font-size:13px; color:var(--muted); line-height:1.5;
-  }
+/* label content */
+.row-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;outline:none;cursor:text;
+  border-radius:3px;padding:1px 2px;transition:background .12s;font-size:12px}
+.g-row.proj-row .row-name{font-weight:700;font-size:12px;color:var(--hdr-title)}
+.g-row.sub-row .row-name{font-size:11px;color:var(--text-sub)}
+.row-name:hover{background:rgba(58,95,232,.07)}
+.row-name:focus{background:rgba(58,95,232,.12);white-space:normal;text-overflow:clip}
+.row-act{width:18px;height:18px;border-radius:4px;border:none;cursor:pointer;background:transparent;color:var(--text-muted);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .12s,color .12s}
+.row-act:hover{background:var(--accent-lt);color:var(--accent)}
+.row-act.del:hover{background:rgba(239,68,68,.12);color:#ef4444}
+.row-act svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.collapse-btn{width:14px;height:14px;border:none;cursor:pointer;background:transparent;color:var(--text-muted);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s,color .15s}
+.collapse-btn:hover{color:var(--accent)}
+.collapse-btn.closed{transform:rotate(-90deg)}
+.collapse-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 
-  /* ===================== 3. 拍照畫面 ===================== */
-  #screen-camera{
-    display:flex; flex-direction:column;
-  }
+/* Add project button row */
+.add-proj-btn{display:flex;align-items:center;gap:5px;padding:4px 10px;cursor:pointer;font-size:11px;color:var(--text-muted);
+  font-weight:600;border:none;background:transparent;transition:color .15s,background .15s;width:100%;height:100%}
+.add-proj-btn:hover{color:var(--accent);background:var(--accent-lt)}
+.add-proj-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 
-  /* 拍照頁：中間可伸展區域 */
-  .cam-content{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    padding:12px 20px;
-    gap:16px;
-    min-height:0;
-  }
+/* BAR */
+.gantt-bars-layer{position:absolute;inset:0;pointer-events:none}
+.gantt-bar-wrap{position:absolute;pointer-events:auto;z-index:2;height:calc(100% - 10px);top:5px}
+.gantt-bar-outer{position:relative;height:100%;border-radius:999px;overflow:hidden;cursor:pointer;transition:filter .15s}
+.gantt-bar-outer:hover{filter:brightness(1.08)}
+.gantt-bar-track{position:absolute;inset:0;border-radius:999px;opacity:.20}
+.gantt-bar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:0;min-width:0}
+.gantt-bar-label{position:absolute;inset:0;display:flex;align-items:center;font-size:10px;font-weight:700;color:#fff;
+  pointer-events:none;z-index:3;text-shadow:0 1px 2px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;padding:0 10px}
 
-  /* 相機預覽框：依照模式顯示對應尺寸的鏡頭 */
-  .cam-box{
-    --cam-ratio:552/470; /* 預設2x3模式；2x2模式由JS動態切換 */
-    aspect-ratio:var(--cam-ratio) !important;
-    width:min(calc((100dvh - 280px) * 552/470), calc(100vw - 48px));
-    box-shadow:0 18px 40px -10px #00000055;
-  }
-  .cam-box.mode-2x2{
-    --cam-ratio:552/552;
-    width:min(calc(100dvh - 280px), calc(100vw - 48px));
-  }
-  .print-box{
-    width:min(calc((100dvh - 330px) * 100/148), calc(100vw - 64px));
-  }
-  .shot-progress{ display:flex; gap:10px; }
-  .shot-dot{
-    width:12px; height:12px; border-radius:50%;
-    background:var(--line);
-    transition:background .25s, transform .25s;
-  }
-  .shot-dot.done{ background:var(--accent); }
-  .shot-dot.current{ background:var(--accent); transform:scale(1.3); }
-  .cam-box video, .cam-box canvas{
-    position:absolute; inset:0;
-    width:100%; height:100%; object-fit:cover;
-  }
-  #video{ transform:scaleX(-1); }
-  .frame-overlay-img{
-    position:absolute; inset:0;
-    width:100%; height:100%; object-fit:cover;
-    pointer-events:none;
-  }
-  #capturedCanvas{ display:none; }
-  #capturedCanvas.show{ display:block; }
-  #video.hide{ display:none; }
-  .flash-overlay{
-    position:absolute; inset:0; background:#fff;
-    opacity:0; pointer-events:none; border-radius:18px; z-index:3;
-  }
-  .flash-overlay.fire{ animation:flashFire .3s ease-out; }
-  @keyframes flashFire{ 0%{opacity:1} 100%{opacity:0} }
-  .countdown-num{
-    position:absolute; inset:0;
-    display:flex; align-items:center; justify-content:center;
-    font-family:var(--font);
-    font-weight:900; font-size:120px;
-    color:#fff;
-    text-shadow:0 4px 20px #00000055;
-    background:#00000022;
-    z-index:4; opacity:0; pointer-events:none;
-  }
-  .countdown-num.show{ animation:countPulse .9s ease-out; }
-  @keyframes countPulse{
-    0%{ opacity:0; transform:scale(1.5); }
-    20%{ opacity:1; transform:scale(1); }
-    85%{ opacity:1; transform:scale(1); }
-    100%{ opacity:0; transform:scale(.92); }
-  }
+/* Build Name tag — sits OUTSIDE the bar pill, immediately to its left */
+.gantt-build-tag{position:absolute;right:100%;top:50%;transform:translateY(-50%);margin-right:6px;
+  font-size:10px;font-weight:700;white-space:nowrap;pointer-events:none;z-index:3;
+  max-width:90px;overflow:hidden;text-overflow:ellipsis}
 
-  /* ===================== 4. 列印中 / 完成 ===================== */
-  #screen-printing{
-    display:flex; flex-direction:column;
-  }
+/* TODAY / NOW line — draggable */
+.now-line-hit{position:absolute;top:0;bottom:0;width:18px;margin-left:-9px;z-index:9;cursor:ew-resize;
+  touch-action:none;display:flex;justify-content:center}
+.now-line-visual{width:2px;height:100%;border-radius:2px;pointer-events:none;
+  background:linear-gradient(180deg,var(--accent2),rgba(58,171,242,.3));transition:width .12s,box-shadow .12s}
+.now-line-hit:hover .now-line-visual,.now-line-hit.dragging .now-line-visual{width:3px}
+/* Floating date tooltip — fixed to the viewport (not the scroll area) so it
+   stays visible and follows the cursor while dragging, regardless of
+   vertical scroll position. */
+.now-line-floating-tip{position:fixed;transform:translate(-50%,0);background:var(--accent);color:#fff;
+  font-size:11px;font-weight:700;padding:4px 9px;border-radius:7px;white-space:nowrap;pointer-events:none;
+  z-index:1000;box-shadow:0 6px 16px rgba(0,0,0,.22)}
+.now-line-bar-badge{position:absolute;top:50%;left:0;transform:translate(-50%,-50%);font-size:9px;font-weight:800;
+  color:#fff;background:rgba(0,0,0,.62);padding:1px 5px;border-radius:8px;white-space:nowrap;
+  pointer-events:none;z-index:11;box-shadow:0 1px 4px rgba(0,0,0,.3)}
 
-  .printing-inner{
-    flex:1;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    padding:16px 28px max(var(--edge-pad), env(safe-area-inset-bottom));
-    gap:16px;
-    min-height:0;
-    overflow:hidden;
-  }
+/* BOTTOM ROW */
+#bottom-row{flex-shrink:0;height:210px;display:flex;gap:6px}
+#target-card{width:25%;flex-shrink:0}
+#updates-card{flex:1}
+#target-body{padding:10px 14px;flex:1;min-height:0;overflow:auto}
+#target-text{width:100%;min-height:60px;font-size:12px;color:var(--text);line-height:1.75;outline:none;font-family:inherit}
+#target-text:empty::before{content:attr(data-placeholder);color:var(--text-muted)}
+#target-text ul{margin:0 0 0 16px;padding:0}
+#target-text li{margin:2px 0}
+/* Target toolbar — compact icon buttons that sit inline in the card header */
+.tgt-tool-btn{width:24px;height:24px;border-radius:6px;border:none;cursor:pointer;background:var(--accent-lt);color:var(--accent);
+  font-size:12px;font-family:inherit;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.tgt-tool-btn:hover{background:var(--accent-md)}
+.tgt-tool-btn.active{background:var(--accent);color:#fff}
+.tgt-color-wrap{position:relative;width:24px;height:24px;border-radius:6px;background:var(--accent-lt);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
+.tgt-color-wrap:hover{background:var(--accent-md)}
+.tgt-color-wrap input[type=color]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0}
+.tgt-color-swatch{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--accent);pointer-events:none;background:#3a5fe8}
+#updates-body{padding:6px 10px;flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.update-item{display:flex;align-items:center;gap:7px;padding:3px 4px;border-radius:6px;min-height:27px}
+.update-item:hover{background:var(--row-hover)}
+.status-light{width:9px;height:9px;border-radius:50%;flex-shrink:0;cursor:pointer;transition:transform .15s}
+.status-light:hover{transform:scale(1.3)}
+.status-light.green{background:#22c55e;box-shadow:0 0 5px rgba(34,197,94,.55)}
+.status-light.yellow{background:#eab308;box-shadow:0 0 5px rgba(234,179,8,.55)}
+.status-light.red{background:#ef4444;box-shadow:0 0 5px rgba(239,68,68,.55)}
+.update-text{flex:1;font-size:12px;outline:none;border-radius:3px;min-width:0;word-break:break-word;cursor:text;line-height:1.5;padding:1px 2px;transition:background .12s}
+.update-text:hover{background:rgba(58,95,232,.07)}
+.update-text:focus{background:rgba(58,95,232,.12)}
+.update-del{width:17px;height:17px;border-radius:4px;border:none;cursor:pointer;background:transparent;color:var(--text-muted);
+  font-size:12px;opacity:0;transition:opacity .15s,background .15s;display:flex;align-items:center;justify-content:center}
+.update-item:hover .update-del{opacity:1}
+.update-del:hover{background:rgba(239,68,68,.15);color:#ef4444}
+.update-add-row{display:flex;align-items:center;gap:7px;padding:3px 4px;opacity:.45;font-size:11px;cursor:pointer;transition:opacity .15s;border-radius:6px}
+.update-add-row:hover{opacity:.85;background:var(--row-hover)}
 
-  .print-box{
-    box-shadow:0 24px 50px -12px #00000060;
-    animation:printPop .6s ease-out;
-    flex-shrink:0;
-  }
-  @keyframes printPop{
-    0%{ opacity:0; transform:translateY(18px) scale(.96); }
-    100%{ opacity:1; transform:translateY(0) scale(1); }
-  }
-  .print-box canvas, #previewCanvas{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+/* ROW EDITOR POPUP */
+.rep-overlay{display:none;position:fixed;inset:0;z-index:599;background:rgba(0,0,0,.18)}
+.rep-overlay.show{display:block}
+.row-editor-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--glass-hdr);
+  border:1px solid var(--glass-bdr);border-radius:16px;padding:16px;box-shadow:0 12px 48px rgba(0,0,0,.22);
+  z-index:600;width:min(420px,calc(100vw - 32px));max-height:85vh;overflow-y:auto;display:flex;flex-direction:column;gap:11px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.rep-header{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.rep-header-title-wrap{display:flex;align-items:center;justify-content:center;gap:6px;flex:1;min-width:0}
+.rep-title-color-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;cursor:pointer;border:2px solid var(--glass-bdr);transition:transform .12s}
+.rep-title-color-dot:hover{transform:scale(1.15)}
+.rep-header-title{font-size:13px;font-weight:700;color:var(--hdr-title);text-align:center;outline:none;cursor:text;
+  border-radius:4px;padding:1px 4px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rep-header-title:hover{background:rgba(58,95,232,.07)}
+.rep-header-title:focus{background:rgba(58,95,232,.12);white-space:normal;text-overflow:clip}
+.rep-header-actions{display:flex;gap:6px}
+.rep-icon-btn{width:28px;height:28px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;background:var(--accent-lt);color:var(--accent);transition:background .15s,transform .12s}
+.rep-icon-btn:hover{background:var(--accent-md)}
+.rep-icon-btn:active{transform:scale(.93)}
+.rep-icon-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+.rep-icon-btn.rep-apply{background:rgba(34,197,94,.14);color:#22c55e}
+.rep-icon-btn.rep-apply:hover{background:rgba(34,197,94,.24)}
+.rep-icon-btn.rep-del{background:rgba(239,68,68,.12);color:#ef4444}
+.rep-icon-btn.rep-del:hover{background:rgba(239,68,68,.22)}
+.rep-section{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;border-top:1px solid var(--divider);padding-top:8px;margin-top:2px}
+.rep-input{padding:6px 9px;border-radius:7px;border:1px solid var(--divider);background:var(--glass);color:var(--text);font-size:12px;font-family:inherit;outline:none;width:100%}
+.rep-input:focus{border-color:var(--accent)}
+.rep-inline-wheel{display:none;flex-direction:column;gap:9px;padding:12px;border-radius:12px;background:var(--accent-lt)}
+.rep-bar-item{display:flex;align-items:center;gap:5px;padding:5px 6px;border-radius:8px;background:var(--accent-lt);margin-bottom:4px}
+.rep-bar-tag{flex:1;min-width:0;padding:4px 7px;border-radius:6px;border:1px solid transparent;background:var(--glass);color:var(--text);font-size:11px;font-family:inherit;outline:none}
+.rep-bar-tag:focus{border-color:var(--accent)}
+.rep-bar-range-btn{flex-shrink:0;padding:4px 8px;border-radius:6px;border:1px solid transparent;background:var(--glass);
+  color:var(--text-sub);font-size:10px;font-family:inherit;cursor:pointer;transition:border-color .15s,background .15s;white-space:nowrap}
+.rep-bar-range-btn:hover{border-color:var(--accent);background:var(--accent-lt);color:var(--accent)}
+.rep-bar-del{width:20px;height:20px;border-radius:5px;border:none;cursor:pointer;flex-shrink:0;background:transparent;color:var(--text-muted);
+  display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s}
+.rep-bar-del:hover{background:rgba(239,68,68,.14);color:#ef4444}
+.rep-bar-del svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rep-add-bar{width:100%;height:28px;border-radius:8px;border:1px dashed var(--divider);cursor:pointer;background:transparent;
+  color:var(--text-muted);font-size:11px;font-weight:600;transition:background .15s,color .15s,border-color .15s}
+.rep-add-bar:hover{background:var(--accent-lt);color:var(--accent);border-color:var(--accent)}
 
-  .printing-text{
-    font-family:var(--font);
-    font-weight:800;
-    font-size:22px;
-    color:var(--ink);
-    display:flex; flex-direction:column; align-items:center; gap:12px;
-  }
-  .dot-flicker{ display:flex; gap:7px; }
-  .dot-flicker span{
-    display:inline-block; width:10px; height:10px; border-radius:50%;
-    background:var(--accent);
-    animation:dotBlink 1.2s infinite;
-  }
-  .dot-flicker span:nth-child(2){ animation-delay:.2s; }
-  .dot-flicker span:nth-child(3){ animation-delay:.4s; }
-  @keyframes dotBlink{ 0%,80%,100%{opacity:.15} 40%{opacity:1} }
-  .progress-track{
-    width:200px; height:7px; background:var(--line);
-    border-radius:6px; overflow:hidden;
-  }
-  .progress-fill{
-    height:100%; background:var(--accent); width:0%;
-    border-radius:6px; transition:width .4s linear;
-  }
+/* DATE RANGE CALENDAR PICKER */
+.drp-popup{position:fixed;z-index:900;width:min(248px,calc(100vw - 24px));background:var(--glass-hdr);border:1px solid var(--glass-bdr);
+  border-radius:14px;padding:12px;box-shadow:0 12px 36px rgba(0,0,0,.2);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  display:flex;flex-direction:column;gap:8px}
+.drp-hdr{display:flex;align-items:center;justify-content:space-between}
+.drp-nav-btn{width:24px;height:24px;border-radius:6px;border:none;cursor:pointer;background:var(--accent-lt);color:var(--accent);
+  font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.drp-nav-btn:hover{background:var(--accent-md)}
+.drp-month-lbl{font-size:12px;font-weight:700;color:var(--hdr-title)}
+.drp-range-display{font-size:11px;font-weight:600;color:var(--accent);text-align:center;background:var(--accent-lt);
+  border-radius:7px;padding:4px 6px}
+.drp-dow-row{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.drp-dow{text-align:center;font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase}
+.drp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.drp-day{aspect-ratio:1;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:11px;
+  color:var(--text);display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s;position:relative}
+.drp-day:hover{background:var(--accent-md)}
+.drp-day.in-range{background:var(--accent-lt)}
+.drp-day.range-start,.drp-day.range-end{background:var(--accent);color:#fff;font-weight:700}
+.drp-day.is-today:not(.range-start):not(.range-end){box-shadow:inset 0 0 0 1.5px var(--accent2)}
+.drp-actions{display:flex}
+.drp-done-btn{width:100%;height:28px;border-radius:8px;border:none;cursor:pointer;background:var(--accent);color:#fff;
+  font-size:12px;font-weight:700;transition:filter .15s}
+.drp-done-btn:hover{filter:brightness(1.08)}
 
-  #printingStageInfo{
-    display:flex; flex-direction:column; align-items:center; gap:12px;
-  }
+/* CONFIRM */
+.confirm-overlay{display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.25)}
+.confirm-overlay.show{display:flex;align-items:center;justify-content:center}
+.confirm-box{background:var(--glass-hdr);border:1px solid var(--glass-bdr);border-radius:16px;padding:24px;
+  box-shadow:0 16px 48px rgba(0,0,0,.22);width:min(300px,calc(100vw - 32px));display:flex;flex-direction:column;gap:16px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.confirm-title{font-size:13px;font-weight:700;color:var(--hdr-title);text-align:center}
+.confirm-msg{font-size:12px;color:var(--text-sub);text-align:center;line-height:1.6}
+.confirm-actions{display:flex;gap:8px}
+.confirm-btn{flex:1;height:34px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-weight:600}
+.confirm-btn.yes{background:rgba(239,68,68,.14);color:#ef4444}.confirm-btn.yes:hover{background:rgba(239,68,68,.24)}
+.confirm-btn.no{background:var(--accent-lt);color:var(--accent)}.confirm-btn.no:hover{background:var(--accent-md)}
 
-  /* ── 完成 Popup ── */
-  .popup-backdrop{
-    position:absolute; inset:0; z-index:200;
-    background:rgba(36,23,18,0.35); /* 不用純黑，改用主題深色低透明度，主要靠模糊製造區隔 */
-    backdrop-filter:blur(20px);
-    -webkit-backdrop-filter:blur(20px);
-    display:flex; align-items:center; justify-content:center;
-    padding:24px;
-    opacity:0; visibility:hidden;
-    transition:opacity .35s ease, visibility .35s;
-  }
-  .popup-backdrop.open{
-    opacity:1; visibility:visible;
-  }
-  .popup-card{
-    background:var(--surface);
-    border-radius:28px;
-    padding:32px 28px 28px;
-    width:100%; max-width:360px;
-    display:flex; flex-direction:column; align-items:center; gap:18px;
-    box-shadow:0 30px 60px -12px #00000070;
-    transform:scale(.88) translateY(24px);
-    transition:transform .35s cubic-bezier(.34,1.56,.64,1);
-  }
-  .popup-backdrop.open .popup-card{
-    transform:scale(1) translateY(0);
-  }
-  .popup-icon{ font-size:52px; line-height:1; }
-  .popup-title{
-    font-family:var(--font);
-    font-weight:900;
-    font-size:28px;
-    color:var(--ink);
-    text-align:center;
-    line-height:1.4;
-  }
-  .popup-qr-wrap{
-    /* 強制保持白底，QR code 不能跟著深色主題反轉，否則會影響掃描成功率 */
-    background:#ffffff;
-    border-radius:20px;
-    padding:14px;
-    border:2px solid var(--line);
-  }
-  .popup-qr-wrap img{
-    display:block;
-    width:200px; height:200px;
-    border-radius:10px;
-  }
-  .popup-qr-label{
-    font-family:var(--font);
-    font-weight:700;
-    font-size:15px;
-    color:var(--muted);
-    text-align:center;
-  }
-  .popup-btn{
-    width:100%;
-    font-family:var(--font);
-    font-weight:800;
-    font-size:20px;
-    border-radius:50px;
-    padding:18px 0;
-    border:none;
-    background:var(--accent);
-    color:#fff;
-    cursor:pointer;
-    transition:transform .15s;
-  }
-  .popup-btn:active{ transform:scale(.97); }
+/* SIDEBAR */
+#sidebar{position:fixed;top:0;right:-290px;width:290px;height:100vh;background:var(--glass-hdr);
+  backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6);
+  border-left:1px solid var(--glass-bdr);z-index:400;display:flex;flex-direction:column;gap:14px;padding:20px;
+  transition:right .25s cubic-bezier(.4,0,.2,1);box-shadow:-4px 0 28px rgba(58,95,232,.10)}
+#sidebar.open{right:0}
+#sidebar-overlay{display:none;position:fixed;inset:0;z-index:399;background:rgba(0,0,0,.12)}
+#sidebar-overlay.show{display:block}
+#sidebar-close{align-self:flex-end;width:28px;height:28px;border-radius:7px;border:none;background:var(--accent-lt);
+  color:var(--accent);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center}
+.sb-section{display:flex;flex-direction:column;gap:7px}
+.sb-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em}
+.sb-row{display:flex;align-items:center;justify-content:space-between}
+.toggle{position:relative;width:36px;height:20px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;border-radius:10px;background:#c5d5e8;cursor:pointer;transition:.2s}
+.toggle-slider::before{content:'';position:absolute;left:2px;bottom:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle input:checked+.toggle-slider{background:var(--accent)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(16px)}
+.sb-btn{width:100%;height:32px;border-radius:9px;border:none;cursor:pointer;background:var(--accent-lt);color:var(--accent);font-size:12px;font-weight:600;transition:background .15s}
+.sb-btn:hover{background:var(--accent-md)}
 
+/* COLOR WHEEL */
+.cwp-canvas-wrap{display:flex;justify-content:center}
+.cwp-preview-row{display:flex;align-items:center;gap:8px}
+.cwp-preview{width:34px;height:34px;border-radius:8px;flex-shrink:0;border:2px solid var(--glass-bdr)}
+.cwp-hex-input{flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--divider);background:var(--glass);
+  color:var(--text);font-size:11px;font-family:'Courier New',monospace;font-weight:600;outline:none}
+.cwp-hex-input:focus{border-color:var(--accent)}
+
+@media(max-width:1024px){
+  html,body{overflow-y:auto;overflow-x:hidden}
+  #app{height:auto;min-height:100svh;overflow:visible}
+  #bottom-row{height:auto;flex-direction:column}
+  #target-card{width:100%}
+  #gantt-card{min-height:400px;flex:none}
+  #main-content{overflow:visible}
+}
 </style>
 </head>
 <body>
-
 <div id="app">
-  <div id="app-shell">
-    <div id="screens">
-
-    <!-- ===================== 1. 歡迎光臨 ===================== -->
-    <div class="screen active" id="screen-welcome">
-      <div class="welcome-deco-top">
-        <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="6" fill="var(--accent2)"/><g fill="var(--accent)"><ellipse cx="20" cy="7" rx="5" ry="8"/><ellipse cx="20" cy="33" rx="5" ry="8"/><ellipse cx="7" cy="20" rx="8" ry="5"/><ellipse cx="33" cy="20" rx="8" ry="5"/></g></svg>
-        <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="6" fill="var(--accent)"/><g fill="var(--accent2)"><ellipse cx="20" cy="7" rx="5" ry="8"/><ellipse cx="20" cy="33" rx="5" ry="8"/><ellipse cx="7" cy="20" rx="8" ry="5"/><ellipse cx="33" cy="20" rx="8" ry="5"/></g></svg>
-        <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="6" fill="var(--accent2)"/><g fill="var(--accent)"><ellipse cx="20" cy="7" rx="5" ry="8"/><ellipse cx="20" cy="33" rx="5" ry="8"/><ellipse cx="7" cy="20" rx="8" ry="5"/><ellipse cx="33" cy="20" rx="8" ry="5"/></g></svg>
-      </div>
-      <div class="welcome-mid">
-        <div class="mascot-emoji">👧<span class="emoji-gap">🦁</span></div>
-        <div>
-          <div class="brand-title">小女孩和花花獅<br>拍貼機</div>
-          <div class="brand-sub">PHOTO BOOTH</div>
-        </div>
-      </div>
-      <div class="press-start">PRESS TO START</div>
-    </div>
-
-    <!-- ===================== 2. 選擇照片樣式 ===================== -->
-    <div class="screen" id="screen-layout">
-      <div class="page-header">
-        <div class="page-header-row">
-          <button class="btn-back" id="btnLayoutBack">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            返回
-          </button>
-          <span class="page-title">選擇照片樣式</span>
-        </div>
-      </div>
-      <div class="layout-options">
-        <button class="layout-option" data-layout="2x3">
-          <div class="layout-preview layout-preview-2x3"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-          <div class="layout-option-text">
-            <div class="layout-option-title">2×3 組合</div>
-            <div class="layout-option-desc">共拍 3 張，左右各三張，直式明信片</div>
-          </div>
-        </button>
-        <button class="layout-option" data-layout="2x2">
-          <div class="layout-preview layout-preview-2x2"><span></span><span></span><span></span><span></span></div>
-          <div class="layout-option-text">
-            <div class="layout-option-title">2×2 組合</div>
-            <div class="layout-option-desc">共拍 4 張，左二右二，直式明信片</div>
-          </div>
-        </button>
-      </div>
-      <div class="page-footer">
-        <button class="btn btn-fill" id="btnLayoutConfirm" disabled>確認選擇</button>
-      </div>
-    </div>
-
-    <!-- ===================== 3. 選擇相框 ===================== -->
-    <div class="screen" id="screen-frames">
-      <div class="page-header">
-        <div class="page-header-row">
-          <button class="btn-back" id="btnFrameBack">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            返回
-          </button>
-          <span class="page-title">選擇相框</span>
-        </div>
-      </div>
-      <div class="frames-body">
-        <div class="frames-scroll" id="framesScroll"></div>
-        <div class="scroll-hint" aria-hidden="true">
-          <svg class="scroll-hint-arrow" viewBox="0 0 16 10" fill="none"><path d="M1 9L8 1L15 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span class="scroll-hint-text">滑動選取更多樣式</span>
-          <svg class="scroll-hint-arrow" viewBox="0 0 16 10" fill="none"><path d="M1 1L8 9L15 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-      </div>
-      <div class="page-footer">
-        <button class="btn btn-fill" id="btnFrameConfirm" disabled>確認選擇</button>
-      </div>
-    </div>
-
-    <!-- ===================== 3. 拍照畫面 ===================== -->
-    <div class="screen" id="screen-camera">
-      <div class="page-header">
-        <div class="page-header-row">
-          <button class="btn-back" id="btnCameraBack">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            返回
-          </button>
-          <span class="page-title">姿勢擺好了嗎？</span>
-        </div>
-      </div>
-      <div class="cam-content">
-        <div class="shot-progress" id="shotProgress">
-          <span class="shot-dot"></span><span class="shot-dot"></span><span class="shot-dot"></span><span class="shot-dot"></span>
-        </div>
-        <div class="ratio-box cam-box">
-          <video id="video" autoplay playsinline muted></video>
-          <canvas id="capturedCanvas"></canvas>
-          <div class="countdown-num" id="countdownNum"></div>
-          <div class="flash-overlay" id="flashOverlay"></div>
-        </div>
-      </div>
-      <div class="page-footer">
-        <button class="btn btn-fill" id="btnConfirmShot">開始拍照</button>
-      </div>
-    </div>
-
-    <!-- ===================== 4b. 預覽明信片 ===================== -->
-    <div class="screen" id="screen-preview">
-      <div class="page-header">
-        <div class="page-header-row">
-          <button class="btn-back" id="btnPreviewBack">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            返回
-          </button>
-          <span class="page-title">太可愛了吧</span>
-        </div>
-      </div>
-      <div class="printing-inner">
-        <div class="ratio-box print-box" id="previewBox">
-          <canvas id="previewCanvas"></canvas>
-        </div>
-      </div>
-      <div class="page-footer">
-        <button class="btn btn-fill" id="btnConfirmPrint">確認列印</button>
-      </div>
-    </div>
-
-    <!-- ===================== 5. 列印中 / 完成 ===================== -->
-    <div class="screen" id="screen-printing">
-      <div class="page-header">
-        <div class="page-header-row">
-          <button class="btn-back" id="btnPrintBack">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            返回
-          </button>
-          <span class="page-title" id="printNavTitle">太可愛了吧</span>
-        </div>
-      </div>
-
-      <div class="printing-inner">
-        <div class="ratio-box print-box">
-          <canvas id="resultCanvas"></canvas>
-        </div>
-
-        <div id="printingStageInfo">
-          <div class="printing-text">
-            <div>照片列印中　請稍候</div>
-            <div class="dot-flicker"><span></span><span></span><span></span></div>
-          </div>
-          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-        </div>
-
-      </div>
-      <!-- 底部按鈕（列印中隱藏，完成時不用，由 popup 控制） -->
-    </div>
-
-  </div><!-- /#screens -->
-
-  <!-- ===================== 完成 Popup ===================== -->
-  <div class="popup-backdrop" id="donePopup">
-    <div class="popup-card">
-      <div class="popup-icon">🎉</div>
-      <div class="popup-title">照片準備好啦！</div>
-      <div class="popup-qr-wrap" id="popupQrWrap">
-        <img id="popupQrImg" alt="QR Code" src="">
-      </div>
-      <div class="popup-qr-label" id="popupQrLabel">正在產生 QR Code…</div>
-      <button class="popup-btn" id="btnNextShot">再玩一次</button>
+  <div id="page-header">
+    <span id="page-title" contenteditable="true">Project Dashboard</span>
+    <div class="hdr-btns">
+      <button class="hdr-btn" id="settings-btn">
+        <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="2" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/><circle cx="10" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
+        Settings
+      </button>
     </div>
   </div>
 
-  <div id="copyright-footer">© PLUDDIE STUDIO</div>
-  </div><!-- /#app-shell -->
+  <div id="main-content">
+    <div class="card" id="gantt-card">
+      <div class="card-hdr">
+        <span class="card-title">Project Timeline</span>
+        <div class="card-hdr-right">
+          <button class="card-btn" id="nav-today" title="Jump to today">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Today
+          </button>
+          <button class="card-btn" id="gantt-settings-btn" title="Timeline settings">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Settings dropdown panel (hidden by default) -->
+      <div id="gantt-settings-panel" class="gantt-settings-panel" style="display:none">
+        <div class="gsp-row">
+          <span class="gsp-label">Column Width</span>
+          <input type="range" class="zoom-slider" id="zoom-h" min="14" max="60" step="2" value="22">
+          <span class="zoom-val" id="zoom-h-val">22</span>
+        </div>
+        <div class="gsp-row">
+          <span class="gsp-label">Row Height</span>
+          <input type="range" class="zoom-slider" id="zoom-v" min="24" max="56" step="2" value="36">
+          <span class="zoom-val" id="zoom-v-val">36</span>
+        </div>
+        <div class="gsp-divider"></div>
+        <div class="gsp-toggle-row">
+          <span class="gsp-label">Build Name <span class="gsp-hint">e.g. P0</span></span>
+          <label class="gsp-toggle"><input type="checkbox" id="toggle-build-name" checked><span class="gsp-toggle-slider"></span></label>
+        </div>
+        <div class="gsp-toggle-row">
+          <span class="gsp-label">Item Name <span class="gsp-hint">e.g. PDFC</span></span>
+          <label class="gsp-toggle"><input type="checkbox" id="toggle-item-name" checked><span class="gsp-toggle-slider"></span></label>
+        </div>
+        <div class="gsp-divider"></div>
+        <div class="gsp-toggle-row">
+          <span class="gsp-label">Today Line <span class="gsp-hint">vertical NOW marker</span></span>
+          <label class="gsp-toggle"><input type="checkbox" id="toggle-today-line" checked><span class="gsp-toggle-slider"></span></label>
+        </div>
+        <div class="gsp-toggle-row">
+          <span class="gsp-label">Progress % <span class="gsp-hint">split bar at today</span></span>
+          <label class="gsp-toggle"><input type="checkbox" id="toggle-progress" checked><span class="gsp-toggle-slider"></span></label>
+        </div>
+        <div class="gsp-divider"></div>
+        <div class="gsp-toggle-row">
+          <span class="gsp-label">Today</span>
+          <input type="text" class="gsp-date-input" id="today-date-input" placeholder="YYYY-MM-DD" inputmode="numeric" maxlength="10">
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div id="gantt-wrap">
+          <div class="gantt-fold-handle" id="gantt-fold-handle" title="Collapse project list"><span class="gfh-arrow">&#8249;</span></div>
+          <!-- Fixed header: year nav on left, month+week on right -->
+          <div id="gantt-fixed-hdr">
+            <div id="gantt-fixed-hdr-label">
+              <div class="year-nav">
+                <button class="year-nav-btn" id="nav-prev">&#8249;</button>
+                <span class="year-nav-label" id="nav-label">2026</span>
+                <button class="year-nav-btn" id="nav-next">&#8250;</button>
+              </div>
+            </div>
+            <div id="gantt-fixed-hdr-chart">
+              <div id="gantt-chart-hdr-inner"></div>
+            </div>
+          </div>
+          <!-- Single scroll area: rows with label+chart side by side -->
+          <div id="gantt-scroll-area">
+            <div id="gantt-rows"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="bottom-row">
+      <div class="card" id="target-card">
+        <div class="card-hdr">
+          <span class="card-title">Project Target</span>
+          <div class="card-hdr-right" id="target-toolbar">
+            <button class="tgt-tool-btn" data-cmd="bold" title="Bold"><b>B</b></button>
+            <button class="tgt-tool-btn" data-cmd="italic" title="Italic"><i>I</i></button>
+            <button class="tgt-tool-btn" data-cmd="insertUnorderedList" title="Bullet list">&#8226;&#8211;</button>
+            <span class="tgt-color-wrap" title="Text color">
+              <input type="color" id="target-color-input" value="#3a5fe8">
+              <span class="tgt-color-swatch" id="target-color-swatch"></span>
+            </span>
+          </div>
+        </div>
+        <div class="card-body" id="target-body">
+          <div id="target-text" contenteditable="true" data-placeholder="Describe the project objectives, success criteria, and key deliverables here. Click to edit…"></div>
+        </div>
+      </div>
+      <div class="card" id="updates-card">
+        <div class="card-hdr">
+          <span class="card-title">Project Updates</span>
+        </div>
+        <div class="card-body" id="updates-body"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<!-- Sidebar -->
+<div id="sidebar-overlay"></div>
+<div id="sidebar">
+  <button id="sidebar-close">✕</button>
+  <div class="sb-section">
+    <div class="sb-label">Appearance</div>
+    <div class="sb-row">
+      <span style="font-size:12px">Dark Mode</span>
+      <label class="toggle"><input type="checkbox" id="theme-toggle"><span class="toggle-slider"></span></label>
+    </div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">Export</div>
+    <button class="sb-btn" id="export-btn">Export HTML</button>
+  </div>
+</div>
+
+<!-- Popups -->
+<div class="rep-overlay" id="rep-overlay"></div>
+<div id="row-editor-popup" class="row-editor-popup" style="display:none"></div>
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title">Confirm Delete</div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="confirm-actions">
+      <button class="confirm-btn yes" id="confirm-yes">Delete</button>
+      <button class="confirm-btn no" id="confirm-no">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
-/* =========================================================
-   設定區
-========================================================= */
-// 兩種版型各自獨立的相框圖庫，各 4 格
-const FRAME_DATA_2x3 = [
-  { id:'a1', src:null },{ id:'a2', src:null },{ id:'a3', src:null },{ id:'a4', src:null },
+/* ═══ CONSTANTS & STATE ═══ */
+// One-time cleanup: an earlier version of this file auto-saved to
+// localStorage. This version doesn't use localStorage at all — refreshing
+// always returns to the default data below, and Export is the only way
+// to keep your edits — so wipe out that old saved data if present.
+try{localStorage.removeItem('projectDashboard.state.v1');}catch(err){}
+const DEFAULT_COLOR='#3A5FE8';
+let WEEK_W=22;          // px per week column
+let RH_PROJ=36;         // project row height
+let showBuildName=true; // display Build name (e.g. "P0") on bars
+let showItemName=true;  // display Item name (e.g. "PDFC") on bars
+let showTodayLine=true; // display the NOW/today vertical line
+let showProgress=true;  // display progress fill (split by today line)
+let RH_SUB=30;          // sub-group row height
+let simulatedToday=null;
+let viewYear=2026;      // year currently shown in the nav label (updates as you scroll)
+/* The timeline itself spans a wide, fixed range so scrolling left/right
+   feels continuous across many years — it is NOT re-generated per year.
+   Year nav buttons / Today just scroll to the right horizontal position. */
+const RANGE_YEARS_BEFORE=6, RANGE_YEARS_AFTER=6;
+const BASE_YEAR=2026;
+let viewStart=new Date(BASE_YEAR-RANGE_YEARS_BEFORE,0,4);
+let viewEnd=new Date(BASE_YEAR+RANGE_YEARS_AFTER,11,27);
+let idCnt=100;
+const newId=()=>'id'+(++idCnt);
+let confirmCb=null;
+
+/* ═══ DATA ═══ */
+function makePhaseBars(pairs){
+  return['PDFC','SOP','Mini','Main'].map((n,i)=>({id:newId(),label:n,start:pairs[i][0],end:pairs[i][1]}));
+}
+let projects=[
+  {id:'p1',name:'Project 1',color:'#3A5FE8',collapsed:false,subgroups:[
+    {id:newId(),name:'P0',bars:makePhaseBars([[new Date(2026,0,5),new Date(2026,0,19)],[new Date(2026,0,19),new Date(2026,1,2)],[new Date(2026,1,2),new Date(2026,1,16)],[new Date(2026,1,16),new Date(2026,1,30)]])},
+    {id:newId(),name:'P1',bars:makePhaseBars([[new Date(2026,1,16),new Date(2026,2,2)],[new Date(2026,2,2),new Date(2026,2,16)],[new Date(2026,2,16),new Date(2026,3,6)],[new Date(2026,3,6),new Date(2026,3,20)]])},
+    {id:newId(),name:'EVT',bars:makePhaseBars([[new Date(2026,3,6),new Date(2026,3,20)],[new Date(2026,3,20),new Date(2026,4,4)],[new Date(2026,4,4),new Date(2026,4,18)],[new Date(2026,4,18),new Date(2026,5,1)]])},
+    {id:newId(),name:'DVT',bars:makePhaseBars([[new Date(2026,5,1),new Date(2026,5,15)],[new Date(2026,5,15),new Date(2026,6,6)],[new Date(2026,6,6),new Date(2026,6,20)],[new Date(2026,6,20),new Date(2026,8,7)]])},
+    {id:newId(),name:'PVT',bars:makePhaseBars([[new Date(2026,8,7),new Date(2026,8,21)],[new Date(2026,8,21),new Date(2026,9,5)],[new Date(2026,9,5),new Date(2026,9,19)],[new Date(2026,9,19),new Date(2026,10,2)]])}
+  ]},
+  {id:'p2',name:'Project 2',color:'#3AABF2',collapsed:false,subgroups:[
+    {id:newId(),name:'P0',bars:makePhaseBars([[new Date(2026,0,19),new Date(2026,1,2)],[new Date(2026,1,2),new Date(2026,1,16)],[new Date(2026,1,16),new Date(2026,2,2)],[new Date(2026,2,2),new Date(2026,2,16)]])},
+    {id:newId(),name:'P1',bars:makePhaseBars([[new Date(2026,2,16),new Date(2026,3,6)],[new Date(2026,3,6),new Date(2026,3,20)],[new Date(2026,3,20),new Date(2026,4,4)],[new Date(2026,4,4),new Date(2026,4,18)]])},
+    {id:newId(),name:'EVT',bars:makePhaseBars([[new Date(2026,4,18),new Date(2026,5,1)],[new Date(2026,5,1),new Date(2026,5,15)],[new Date(2026,5,15),new Date(2026,6,6)],[new Date(2026,6,6),new Date(2026,6,20)]])},
+    {id:newId(),name:'DVT',bars:makePhaseBars([[new Date(2026,6,20),new Date(2026,8,3)],[new Date(2026,8,3),new Date(2026,8,17)],[new Date(2026,8,17),new Date(2026,9,1)],[new Date(2026,9,1),new Date(2026,9,15)]])},
+    {id:newId(),name:'PVT',bars:makePhaseBars([[new Date(2026,9,19),new Date(2026,10,2)],[new Date(2026,10,2),new Date(2026,10,16)],[new Date(2026,10,16),new Date(2026,11,1)],[new Date(2026,11,1),new Date(2026,11,14)]])}
+  ]}
 ];
-const FRAME_DATA_2x2 = [
-  { id:'b1', src:null },{ id:'b2', src:null },{ id:'b3', src:null },{ id:'b4', src:null },
+let updates=[
+  {id:newId(),status:'green',text:'CTB build on schedule — all critical components received, assembly starts Monday'},
+  {id:newId(),status:'yellow',text:'EVT build slipped 1 week — connector tooling delayed at supplier'},
+  {id:newId(),status:'red',text:'DVT yield below target (62%) — root cause analysis in progress with ME/EE'},
 ];
-function getFramePool(){ return state.layout === '2x3' ? FRAME_DATA_2x3 : FRAME_DATA_2x2; }
 
-const EMAILJS_CONFIG = {
-  enabled: false,
-  publicKey: 'tOXPtKhdfr5mQNlps',
-  serviceId: 'service_t7d5jeu',
-  templateId: 'template_ivd4njg',
-  toEmail: 'pluddiedoodle@gmail.com'
-};
-
-const IMGBB_CONFIG = {
-  enabled: true,
-  apiKey: '51ef997908f65842badc1eddf498bbe8',
-};
-
-const OUT_W = 1181, OUT_H = 1748; // 100×148mm 明信片尺寸（4×6），300dpi
-const GRID_GAP = 16; // 拼貼格子之間的間距(px，以輸出畫布尺寸為基準)
-function getShotsRequired(){ return state.layout === '2x3' ? 3 : 4; }
-
-/* ========================================================= */
-
-let state = {
-  selectedFrame: null,
-  layout: null,        // '2x2' 或 '2x4'
-  stream: null,
-  shots: [],            // 已確認的拍攝結果(dataURL陣列)
-  capturedDataUrl: null,
-  shotState: 'live',
-  counting: false,
-};
-
-const screens = {
-  welcome:  document.getElementById('screen-welcome'),
-  frames:   document.getElementById('screen-frames'),
-  layout:   document.getElementById('screen-layout'),
-  camera:   document.getElementById('screen-camera'),
-  preview:  document.getElementById('screen-preview'),
-  printing: document.getElementById('screen-printing'),
-};
-
-function goTo(name){
-  Object.values(screens).forEach(s=>s.classList.remove('active'));
-  screens[name].classList.add('active');
+/* ═══ DATE HELPERS ═══ */
+function getToday(){if(simulatedToday)return new Date(simulatedToday);const d=new Date();d.setHours(0,0,0,0);return d;}
+function getWeeks(){const w=[];let d=new Date(viewStart);while(d<=viewEnd){w.push(new Date(d));d.setDate(d.getDate()+7);}return w;}
+function getMonthGroups(weeks){
+  const g=[];let cur=null;
+  weeks.forEach((w,i)=>{
+    const k=w.getFullYear()+'-'+w.getMonth();
+    if(!cur||cur.key!==k){cur={key:k,label:w.toLocaleString('en',{month:'short'}),weeks:[]};g.push(cur);}
+    cur.weeks.push({date:w,wn:getWeekOfMonth(w),idx:i});
+  });
+  return g;
 }
-
-function resetToWelcome(){
-  state.selectedFrame = null;
-  state.layout = null;
-  document.getElementById('btnFrameConfirm').disabled = true;
-  document.getElementById('btnLayoutConfirm').disabled = true;
-  document.querySelectorAll('.layout-option').forEach(el=>el.classList.remove('selected'));
-  goTo('welcome');
+function getWeekOfMonth(d){const m1=new Date(d.getFullYear(),d.getMonth(),1);return Math.ceil(((d-m1)/86400000+m1.getDay()+1)/7);}
+function dateToWeekIdx(date,weeks){
+  let best=0,bestD=Infinity;
+  weeks.forEach((w,i)=>{const d=Math.abs(w-date);if(d<bestD){bestD=d;best=i;}});
+  return best;
 }
-
-/* ---------- 1. 歡迎頁 ---------- */
-async function requestCameraPermission(){
-  if(state.stream && state.stream.active) return state.stream;
-  try{
-    state.stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:'user', width:{ideal:1080}, height:{ideal:1440} }, audio:false
+/* Fractional position (in week-units) of `date` along the weeks axis.
+   Unlike dateToWeekIdx (nearest-week, used for snapping UI), this gives
+   a continuous value so pixel placement lines up exactly with the
+   today/NOW line, which is also computed fractionally. */
+function dateToWeekPos(date,weeks){
+  if(date<=weeks[0])return 0;
+  if(date>=weeks[weeks.length-1])return weeks.length-1;
+  for(let i=0;i<weeks.length-1;i++){
+    if(date>=weeks[i]&&date<weeks[i+1]){
+      return i+((date-weeks[i])/(weeks[i+1]-weeks[i]));
+    }
+  }
+  return weeks.length-1;
+}
+/* Inverse of dateToWeekPos — turns a fractional week-position back into a
+   Date, used while dragging the Today line to find what date the cursor
+   is currently over. */
+function weekPosToDate(pos,weeks){
+  const last=weeks.length-1;
+  if(pos<=0)return new Date(weeks[0]);
+  if(pos>=last)return new Date(weeks[last]);
+  const i=Math.floor(pos),frac=pos-i;
+  return new Date(weeks[i].getTime()+frac*(weeks[i+1]-weeks[i]));
+}
+/* Measures how wide a build/project-name tag would render (capped to the
+   .gantt-build-tag max-width), so we can tell whether it would get clipped
+   off the left edge of the visible viewport. */
+function measureTagWidth(text){
+  const ctx=measureTagWidth._ctx||(measureTagWidth._ctx=document.createElement('canvas').getContext('2d'));
+  ctx.font='700 10px "Segoe UI","PingFang TC",sans-serif';
+  return Math.min(ctx.measureText(text).width,90);
+}
+/* Given a candidate scrollLeft, nudge it left a little if doing so is
+   needed to reveal a build/project-name tag that would otherwise get
+   clipped right at the visible edge — keeps the "leftmost" bar's label
+   from being hidden, e.g. in the default view. */
+function avoidLeftEdgeTagClip(candidate){
+  if(!showBuildName)return candidate;
+  const weeks=getWeeks();
+  let min=candidate;
+  const WINDOW=140; // only consider bars landing just past the candidate edge
+  function check(start,text){
+    const left=dateToWeekPos(start,weeks)*WEEK_W;
+    if(left>=candidate&&left<=candidate+WINDOW){
+      const need=left-measureTagWidth(text)-6-8;
+      if(need<min)min=need;
+    }
+  }
+  projects.forEach(proj=>{
+    let first=true;
+    proj.subgroups.forEach(sg=>{
+      if(!sg.bars.length)return;
+      if(first){check(new Date(Math.min(...sg.bars.map(b=>b.start))),proj.name);first=false;}
+      const earliest=sg.bars.reduce((a,b)=>a.start<b.start?a:b);
+      check(earliest.start,sg.name);
     });
-  }catch(err){
-    console.error('相機權限請求失敗', err);
-    state.stream = null;
+  });
+  return Math.max(0,min);
+}
+function fmtDate(d){if(!d)return '';return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+/* Scroll the gantt area so that Jan 1 of `y` is at the left edge */
+function scrollToYear(y){
+  const weeks=getWeeks();
+  const jan1=new Date(y,0,1);
+  const idx=dateToWeekIdx(jan1,weeks);
+  const scrollArea=document.getElementById('gantt-scroll-area');
+  scrollArea.scrollLeft=avoidLeftEdgeTagClip(Math.max(0,idx*WEEK_W-4));
+  viewYear=y;
+  document.getElementById('nav-label').textContent=y;
+}
+/* Scroll the gantt area so today's date is centered in view */
+function scrollToToday(){
+  const weeks=getWeeks();
+  const today=getToday();
+  const idx=dateToWeekIdx(today,weeks);
+  const scrollArea=document.getElementById('gantt-scroll-area');
+  const visibleW=scrollArea.clientWidth-getLabelW();
+  scrollArea.scrollLeft=avoidLeftEdgeTagClip(Math.max(0,idx*WEEK_W-visibleW/2));
+  viewYear=today.getFullYear();
+  document.getElementById('nav-label').textContent=viewYear;
+}
+/* Update the year label shown in the nav based on what's currently scrolled into view */
+function updateYearLabelFromScroll(){
+  const scrollArea=document.getElementById('gantt-scroll-area');
+  const weeks=getWeeks();
+  const visibleLeftPx=scrollArea.scrollLeft;
+  const idx=Math.round(visibleLeftPx/WEEK_W);
+  const w=weeks[Math.max(0,Math.min(weeks.length-1,idx))];
+  if(w){
+    viewYear=w.getFullYear();
+    document.getElementById('nav-label').textContent=viewYear;
   }
-  return state.stream;
+}
+function getNowOffset(weeks){
+  const now=getToday();
+  for(let i=0;i<weeks.length-1;i++){if(now>=weeks[i]&&now<weeks[i+1])return(i+((now-weeks[i])/(weeks[i+1]-weeks[i])))*WEEK_W;}
+  return -1;
+}
+function autoProgress(bar){
+  const now=getToday(),s=bar.start.getTime(),e=bar.end.getTime(),n=now.getTime();
+  if(n<=s)return 0;if(n>=e)return 100;return Math.round(((n-s)/(e-s))*100);
 }
 
-screens.welcome.addEventListener('click', async ()=>{
-  await requestCameraPermission();
-  goTo('layout');
-});
+/* ═══ GANTT RENDER ═══ */
+function renderGantt(){
+  const weeks=getWeeks();
+  const mGroups=getMonthGroups(weeks);
+  const totalW=weeks.length*WEEK_W;
+  const todayIdx=dateToWeekIdx(getToday(),weeks);
 
-/* ---------- 3. 相框選擇 ---------- */
-function renderFrameList(){
-  const FRAME_DATA = getFramePool();
-  const wrap = document.getElementById('framesScroll');
-  wrap.innerHTML = '';
-  FRAME_DATA.forEach(frame=>{
-    const slot = document.createElement('div');
-    slot.className = 'frame-slot' + (frame.src ? ' has-image' : '');
-    slot.dataset.id = frame.id;
-
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.style.display = 'none';
-    fileInput.addEventListener('change', (e)=>{
-      const file = e.target.files[0]; if(!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev)=>{
-        frame.src = ev.target.result;
-        document.querySelectorAll('.frame-slot').forEach(c=>c.classList.remove('selected'));
-        state.selectedFrame = frame;
-        document.getElementById('btnFrameConfirm').disabled = false;
-        renderFrameList();
-        const refreshed = wrap.querySelector(`.frame-slot[data-id="${frame.id}"]`);
-        if(refreshed) refreshed.classList.add('selected');
-      };
-      reader.readAsDataURL(file);
+  /* — Fixed header (month + weeks) — */
+  const hdrInner=document.getElementById('gantt-chart-hdr-inner');
+  hdrInner.innerHTML='';
+  hdrInner.style.width=totalW+'px';
+  const mRow=document.createElement('div');mRow.className='gantt-hdr-months';
+  mGroups.forEach(mg=>{
+    const el=document.createElement('div');el.className='month-group';el.style.width=(mg.weeks.length*WEEK_W)+'px';
+    const ml=document.createElement('div');ml.className='month-label';ml.style.width='100%';ml.textContent=mg.label;el.appendChild(ml);
+    const wl=document.createElement('div');wl.className='week-labels';
+    mg.weeks.forEach(w=>{
+      const wc=document.createElement('div');wc.className='week-cell'+(w.idx===todayIdx?' today-wk':'');
+      wc.style.width=WEEK_W+'px';wc.textContent=w.wn;wl.appendChild(wc);
     });
-    slot.appendChild(fileInput);
+    el.appendChild(wl);mRow.appendChild(el);
+  });
+  hdrInner.appendChild(mRow);
 
-    const inner = document.createElement('div');
-    inner.className = 'slot-inner';
-    if(frame.src){
-      const img = document.createElement('img'); img.src = frame.src; img.alt = '';
-      inner.appendChild(img);
-    } else {
-      inner.innerHTML = `<svg class="plus-icon" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>`;
-    }
-    slot.appendChild(inner);
+  /* — Rows — */
+  const rowsEl=document.getElementById('gantt-rows');
+  rowsEl.innerHTML='';
+  // chart area total width drives gantt-rows width so horizontal scroll works
+  rowsEl.style.minWidth=(getLabelW()+totalW)+'px';
 
-    if(frame.src){
-      const rb = document.createElement('div');
-      rb.className = 'replace-btn';
-      rb.innerHTML = `<svg viewBox="0 0 24 24" fill="none"><path d="M4 16.5V19a1 1 0 001 1h2.5L18 9.5 14.5 6 4 16.5zM16 4l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      rb.addEventListener('click', (e)=>{ e.stopPropagation(); fileInput.click(); });
-      slot.appendChild(rb);
-    }
-
-    slot.insertAdjacentHTML('beforeend', `
-      <div class="sel-badge">
-        <svg viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>`);
-
-    slot.addEventListener('click', ()=>{
-      if(!frame.src){ fileInput.click(); return; }
-      document.querySelectorAll('.frame-slot').forEach(c=>c.classList.remove('selected'));
-      slot.classList.add('selected');
-      state.selectedFrame = frame;
-      document.getElementById('btnFrameConfirm').disabled = false;
+  projects.forEach((proj,pi)=>{
+    rowsEl.appendChild(buildProjRow(proj,pi,weeks,totalW));
+    proj.subgroups.forEach((sg,si)=>{
+      const row=buildSubRow(sg,proj,pi,si,weeks,totalW);
+      if(proj.collapsed)row.classList.add('collapsed-hidden');
+      rowsEl.appendChild(row);
     });
-
-    if(state.selectedFrame && state.selectedFrame.id === frame.id) slot.classList.add('selected');
-    wrap.appendChild(slot);
   });
-  enforceFrameSlotHeights();
-}
 
-// 直接用實際量到的寬度算出高度並鎖死，不依賴 CSS aspect-ratio 是否被瀏覽器/預覽工具支援
-function enforceFrameSlotHeights(){
-  document.querySelectorAll('#framesScroll .frame-slot').forEach(slot=>{
-    const w = slot.getBoundingClientRect().width;
-    if(w > 0) slot.style.height = (w * 85 / 54) + 'px';
-  });
-}
-window.addEventListener('resize', ()=>{
-  if(screens.frames.classList.contains('active')) enforceFrameSlotHeights();
-});
+  /* Add Project row */
+  const addRow=document.createElement('div');addRow.className='g-row add-row';
+  const addLbl=document.createElement('div');addLbl.className='g-lbl';
+  const addBtn=document.createElement('button');addBtn.className='add-proj-btn';
+  addBtn.innerHTML=`<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Project`;
+  addBtn.addEventListener('click',addProject);
+  addLbl.appendChild(addBtn);
+  const addChart=document.createElement('div');addChart.className='g-chart';
+  addChart.style.width=totalW+'px';
+  addRow.append(addLbl,addChart);rowsEl.appendChild(addRow);
 
-document.getElementById('btnFrameBack').addEventListener('click', ()=>{ goTo('layout'); });
-
-document.getElementById('btnFrameConfirm').addEventListener('click', startCamera);
-
-/* ---------- 2b. 選擇排版 ---------- */
-document.querySelectorAll('.layout-option').forEach(opt=>{
-  opt.addEventListener('click', ()=>{
-    document.querySelectorAll('.layout-option').forEach(o=>o.classList.remove('selected'));
-    opt.classList.add('selected');
-    state.layout = opt.dataset.layout;
-    document.getElementById('btnLayoutConfirm').disabled = false;
-  });
-});
-
-document.getElementById('btnLayoutBack').addEventListener('click', ()=>{
-  goTo('welcome');
-});
-
-document.getElementById('btnLayoutConfirm').addEventListener('click', ()=>{
-  renderFrameList();
-  goTo('frames');
-});
-
-/* ---------- 4. 拍照畫面 ---------- */
-async function startCamera(){
-  // 依照版型設定鏡頭框比例
-  const camBox = document.querySelector('.cam-box');
-  if(state.layout === '2x2'){
-    camBox.classList.add('mode-2x2');
-  } else {
-    camBox.classList.remove('mode-2x2');
+  /* NOW line — rendered into gantt-rows as a draggable positioned overlay */
+  // Remove old now line if any
+  const oldNow=rowsEl.querySelector('.now-line-hit');
+  if(oldNow)oldNow.remove();
+  const nowOff=getNowOffset(weeks);
+  if(nowOff>=0&&showTodayLine){
+    const hit=document.createElement('div');hit.className='now-line-hit';
+    hit.style.left=(getLabelW()+nowOff)+'px';
+    const visual=document.createElement('div');visual.className='now-line-visual';hit.appendChild(visual);
+    rowsEl.style.position='relative';
+    rowsEl.appendChild(hit);
+    attachNowLineDrag(hit,weeks,totalW);
   }
 
-  // 依照版型產生進度點
-  const SHOTS = getShotsRequired();
-  const progressEl = document.getElementById('shotProgress');
-  progressEl.innerHTML = Array.from({length:SHOTS}, ()=>'<span class="shot-dot"></span>').join('');
-
-  state.shots = [];
-  updateShotProgress();
-  resetCameraState();
-  goTo('camera');
-  const stream = await requestCameraPermission();
-  if(stream){
-    document.getElementById('video').srcObject = stream;
-  } else {
-    alert('無法開啟鏡頭。請至瀏覽器的網站設定中允許相機權限後再試一次。');
-    goTo('frames');
-  }
+  /* Mirror header scroll when scroll-area scrolls horizontally */
+  const scrollArea=document.getElementById('gantt-scroll-area');
+  const hdrChart=document.getElementById('gantt-fixed-hdr-chart');
+  scrollArea.onscroll=()=>{hdrChart.scrollLeft=scrollArea.scrollLeft;updateYearLabelFromScroll();};
 }
 
-function updateShotProgress(){
-  const SHOTS = getShotsRequired();
-  document.querySelectorAll('#shotProgress .shot-dot').forEach((dot, i)=>{
-    dot.classList.toggle('done', i < state.shots.length);
-    dot.classList.toggle('current', i === state.shots.length && state.shots.length < SHOTS);
+function getLabelW(){
+  if(window.lblCollapsed)return 0;
+  return (typeof window.LW_EXPANDED==='number'?window.LW_EXPANDED:150);
+}
+
+/* ── Project row ── */
+function buildProjRow(proj,pi,weeks,totalW){
+  const row=document.createElement('div');row.className='g-row proj-row';
+
+  const lbl=document.createElement('div');lbl.className='g-lbl';
+  const colBtn=makeCollapse(proj.collapsed);
+  colBtn.addEventListener('click',e=>{e.stopPropagation();proj.collapsed=!proj.collapsed;renderGantt();});
+  const editBtn=makeRowAct(pencilSvg(),'Edit Project');
+  editBtn.addEventListener('click',e=>{e.stopPropagation();openProjectEditor(proj,pi);});
+  const delBtn=makeRowAct(trashSvg(),'Delete','del');
+  delBtn.addEventListener('click',e=>{e.stopPropagation();confirmDelete('Delete project "'+proj.name+'"?',()=>{projects.splice(pi,1);renderGantt();});});
+
+  const chart=document.createElement('div');chart.className='g-chart';chart.style.width=totalW+'px';
+  const layer=document.createElement('div');layer.className='gantt-bars-layer';
+  let firstProjBar=true,firstBuildTagEl=null;
+  const insideLabelFor=sg=>showItemName?sg.name:null;
+  proj.subgroups.forEach((sg)=>{
+    if(!sg.bars.length)return;
+    const minS=new Date(Math.min(...sg.bars.map(b=>b.start)));
+    const maxE=new Date(Math.max(...sg.bars.map(b=>b.end)));
+    const bar={id:sg.id,label:'',start:minS,end:maxE};
+    const barColor=sg.color||proj.color;
+    // Build Name outside tag: proj.name shown only once (leftmost bar) when toggle ON
+    const outsideTag=showBuildName&&firstProjBar?proj.name:null;
+    const el=buildBarEl(bar,barColor,weeks,totalW,()=>openRowEditor(sg,pi,proj.subgroups.indexOf(sg)),outsideTag,{baseLabel:insideLabelFor(sg)});
+    el.style.height='calc(100% - 14px)';el.style.top='7px';
+    if(firstProjBar){firstBuildTagEl=el.querySelector('.gantt-build-tag');firstProjBar=false;}
+    layer.appendChild(el);
   });
-  // 更新按鈕文字
-  const btn = document.getElementById('btnConfirmShot');
-  if(state.shots.length === 0){
-    btn.textContent = '開始拍照';
-  } else if(state.shots.length >= SHOTS){
-    btn.textContent = '預覽照片';
-  } else {
-    btn.innerHTML = `準備拍第 ${state.shots.length + 1} 張`;
+  // Live-sync: typing the project name updates the visible build-tag on
+  // the bar immediately, without a full renderGantt (which would yank
+  // focus out of this contentEditable mid-keystroke).
+  const name=makeRowName(proj.name,v=>proj.name=v,v=>{if(firstBuildTagEl)firstBuildTagEl.textContent=v;});
+  lbl.append(colBtn,name,editBtn,delBtn);
+  chart.appendChild(layer);
+  row.append(lbl,chart);
+  return row;
+}
+
+/* ── Sub-group row ── */
+function buildSubRow(sg,proj,pi,si,weeks,totalW){
+  const row=document.createElement('div');row.className='g-row sub-row';
+
+  const lbl=document.createElement('div');lbl.className='g-lbl';
+
+  const chart=document.createElement('div');chart.className='g-chart';chart.style.width=totalW+'px';
+  const layer=document.createElement('div');layer.className='gantt-bars-layer';
+  const barColor=sg.color||proj.color;
+  let firstSubBar=true,firstBuildTagEl=null;
+  sg.bars.forEach(bar=>{
+    const outsideTag=showBuildName&&firstSubBar?sg.name:null;
+    const insideLabel=showItemName?bar.label:null;
+    const el=buildBarEl(bar,barColor,weeks,totalW,()=>openRowEditor(sg,pi,si),outsideTag,{baseLabel:insideLabel});
+    if(firstSubBar){firstBuildTagEl=el.querySelector('.gantt-build-tag');firstSubBar=false;}
+    layer.appendChild(el);
+  });
+  // Live-sync: typing the build name updates the visible build-tag on the
+  // bar immediately, without a full renderGantt (which would yank focus
+  // out of this contentEditable mid-keystroke).
+  const name=makeRowName(sg.name,v=>sg.name=v,v=>{if(firstBuildTagEl)firstBuildTagEl.textContent=v;});
+  name.style.paddingLeft='4px';
+  lbl.append(name);
+  chart.appendChild(layer);
+  row.append(lbl,chart);
+  return row;
+}
+
+/* ── Build bar element ──
+   `baseLabel` is the label that's ALWAYS shown on this bar by default
+   (Build name "P0" for project-row mini-bars, Item name "PDFC" for
+   sub-group/build-row bars). `buildName` is only used to optionally
+   prefix sub-group rows with their parent Build name when the
+   "Build Name" toggle is on (it has no effect on project rows, which
+   already show the build name as their base label).
+   The Build Name, when shown, renders as a separate tag BEFORE/OUTSIDE
+   the bar pill — never overlapping the bar itself. */
+function buildBarEl(bar,color,weeks,totalW,onClick,buildName,opts){
+  opts=opts||{};
+  const sPos=dateToWeekPos(bar.start,weeks);
+  const ePos=dateToWeekPos(bar.end,weeks);
+  const left=sPos*WEEK_W, width=Math.max((ePos-sPos)*WEEK_W,6);
+  const prog=autoProgress(bar);
+
+  const wrap=document.createElement('div');wrap.className='gantt-bar-wrap';wrap.style.cssText=`left:${left}px;width:${width}px`;
+  wrap.dataset.start=bar.start.getTime();wrap.dataset.end=bar.end.getTime();
+
+  // Outside tag (before/left of bar) — only rendered when buildName is non-null
+  if(buildName){
+    const tag=document.createElement('div');tag.className='gantt-build-tag';tag.textContent=buildName;
+    tag.style.color=color;
+    wrap.appendChild(tag);
   }
+
+  const outer=document.createElement('div');outer.className='gantt-bar-outer';
+  const track=document.createElement('div');track.className='gantt-bar-track';track.style.background=color;
+  const fill=document.createElement('div');fill.className='gantt-bar-fill';fill.style.cssText=`width:${showProgress?prog:100}%;background:${color}`;
+  const lbl=document.createElement('div');lbl.className='gantt-bar-label';
+  if(opts.baseLabel)lbl.textContent=opts.baseLabel;
+  outer.append(track,fill,lbl);
+  if(onClick)outer.addEventListener('click',onClick);
+  wrap.appendChild(outer);return wrap;
 }
 
-function resetCameraState(){
-  state.shotState = 'live'; state.counting = false;
-  document.getElementById('video').classList.remove('hide');
-  document.getElementById('capturedCanvas').classList.remove('show');
-  document.getElementById('btnConfirmShot').disabled = false;
-}
-
-document.getElementById('btnCameraBack').addEventListener('click', ()=>{
-  if(state.stream) state.stream.getTracks().forEach(t=>t.stop());
-  state.shots = [];
-  resetCameraState();
-  goTo('frames');
-});
-
-document.getElementById('btnConfirmShot').addEventListener('click', ()=>{
-  if(state.counting) return;
-  const SHOTS = getShotsRequired();
-  if(state.shotState === 'waiting'){
-    // 已拍完一張，點按鈕決定下一步
-    if(state.shots.length >= SHOTS){
-      // 全部拍完 → 去預覽
-      goToPreview();
-    } else {
-      // 還有下一張 → 重設live並開始倒數
-      resetCameraState();
-      startCountdownThenShoot();
+/* ── Draggable Today/NOW line ──
+   Lets the user grab the vertical "today" line and slide it left/right to
+   preview a different date. While dragging, every bar's progress fill and
+   a small "NN%" badge update live (no full re-render, so it stays smooth);
+   on release the change is committed via a normal renderGantt(). */
+function attachNowLineDrag(hit,weeks,totalW){
+  const rowsEl=document.getElementById('gantt-rows');
+  let dragging=false,cache=null,floatTip=null,tipTop=0;
+  function buildCache(){
+    cache=[...rowsEl.querySelectorAll('.gantt-bar-wrap')].map(w=>({
+      s:+w.dataset.start,e:+w.dataset.end,
+      fill:w.querySelector('.gantt-bar-fill'),
+      width:parseFloat(w.style.width)||0,
+      el:w
+    }));
+  }
+  function liveUpdate(t){
+    if(!cache)return;
+    cache.forEach(c=>{
+      let prog=0;
+      if(t<=c.s)prog=0;else if(t>=c.e)prog=100;else prog=Math.round(((t-c.s)/(c.e-c.s))*100);
+      if(showProgress&&c.fill)c.fill.style.width=prog+'%';
+      let badge=c.el.querySelector('.now-line-bar-badge');
+      if(t>c.s&&t<c.e){
+        if(!badge){badge=document.createElement('div');badge.className='now-line-bar-badge';c.el.appendChild(badge);}
+        badge.textContent=prog+'%';
+        badge.style.left=(((t-c.s)/(c.e-c.s))*c.width)+'px';
+      }else if(badge){badge.remove();}
+    });
+  }
+  function moveTo(clientX){
+    const rect=rowsEl.getBoundingClientRect();
+    let x=clientX-rect.left-getLabelW();
+    x=Math.max(0,Math.min(x,totalW));
+    const d=weekPosToDate(x/WEEK_W,weeks);
+    d.setHours(0,0,0,0);
+    simulatedToday=d;
+    hit.style.left=(getLabelW()+x)+'px';
+    todayDateInput.value=fmtDate(d);
+    if(floatTip){
+      floatTip.textContent=fmtDate(d);
+      floatTip.style.left=clientX+'px';
+      floatTip.style.top=tipTop+'px';
     }
-  } else if(state.shotState === 'live'){
-    startCountdownThenShoot();
+    liveUpdate(d.getTime());
   }
-});
-
-function setCamButtonsDisabled(d){
-  document.getElementById('btnConfirmShot').disabled = d;
-}
-
-function startCountdownThenShoot(){
-  state.counting = true; setCamButtonsDisabled(true);
-  const numEl = document.getElementById('countdownNum');
-  let n = 5; showCountdownNumber(numEl, n);
-  const interval = setInterval(()=>{
-    n--;
-    if(n > 0){ showCountdownNumber(numEl, n); }
-    else{
-      clearInterval(interval);
-      setTimeout(()=>{ takeSnapshot(); state.counting = false; setCamButtonsDisabled(false); }, 700);
-    }
-  }, 1000);
-}
-
-function showCountdownNumber(el, n){
-  el.textContent = n; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
-}
-
-function takeSnapshot(){
-  const video = document.getElementById('video');
-  const canvas = document.getElementById('capturedCanvas');
-  const flash = document.getElementById('flashOverlay');
-  flash.classList.remove('fire'); void flash.offsetWidth; flash.classList.add('fire');
-
-  // 拍攝時依照layout決定輸出比例
-  const isSquare = state.layout === '2x2';
-  const snapW = 552, snapH = isSquare ? 552 : 470;
-  canvas.width = snapW; canvas.height = snapH;
-  const ctx = canvas.getContext('2d');
-  drawVideoCover(ctx, video, snapW, snapH, true);
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-
-  // 儲存這張照片
-  state.shots.push(dataUrl);
-  state.shotState = 'waiting'; // 等待使用者點按鈕才進下一張
-  state.counting = false;
-  setCamButtonsDisabled(false);
-  updateShotProgress();
-}
-
-// 計算「cover」裁切：把來源尺寸等比例裁切去填滿目標尺寸，回傳來源圖上要取用的矩形
-function coverCropRect(srcW, srcH, destW, destH){
-  const sr = srcW/srcH, tr = destW/destH;
-  if(sr > tr){ const sh=srcH, sw=sh*tr; return { sx:(srcW-sw)/2, sy:0, sw, sh }; }
-  const sw=srcW, sh=sw/tr; return { sx:0, sy:(srcH-sh)/2, sw, sh };
-}
-
-function drawVideoCover(ctx, video, W, H, mirror){
-  const {sx,sy,sw,sh} = coverCropRect(video.videoWidth, video.videoHeight, W, H);
-  ctx.save();
-  if(mirror){ ctx.translate(W,0); ctx.scale(-1,1); }
-  ctx.drawImage(video, sx,sy,sw,sh, 0,0,W,H);
-  ctx.restore();
-}
-
-function drawImageCover(ctx, img, x, y, w, h){
-  const {sx,sy,sw,sh} = coverCropRect(img.naturalWidth, img.naturalHeight, w, h);
-  ctx.drawImage(img, sx,sy,sw,sh, x,y,w,h);
-}
-
-async function goToPreview(){
-  if(state.stream) state.stream.getTracks().forEach(t=>t.stop());
-  goTo('preview');
-  // 合成預覽（含相框）
-  const canvas = document.getElementById('previewCanvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = OUT_W; canvas.height = OUT_H;
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, OUT_W, OUT_H);
-  const images = await Promise.all(state.shots.map(loadImage));
-  if(state.layout === '2x3'){ draw2x3Layout(ctx, images); }
-  else { draw2x2Layout(ctx, images); }
-  if(state.selectedFrame && state.selectedFrame.src){
-    const frameImg = await loadImage(state.selectedFrame.src).catch(()=>null);
-    if(frameImg) ctx.drawImage(frameImg, 0, 0, OUT_W, OUT_H);
+  function endDrag(){
+    if(!dragging)return;
+    dragging=false;hit.classList.remove('dragging');cache=null;
+    if(floatTip){floatTip.remove();floatTip=null;}
+    renderGantt(); // commit cleanly: re-syncs header highlight, scroll mirror, etc.
   }
-}
-
-function finishCamera(){
-  goToPreview();
-}
-
-document.getElementById('btnPreviewBack').addEventListener('click', ()=>{
-  startCamera();
-});
-
-document.getElementById('btnConfirmPrint').addEventListener('click', ()=>{
-  goTo('printing');
-  composeAndPrint();
-});
-
-/* ---------- 4. 列印中 ---------- */
-document.getElementById('btnPrintBack').addEventListener('click', ()=>{
-  const popup = document.getElementById('donePopup');
-  if(popup.classList.contains('open')){
-    popup.classList.remove('open');
-    document.getElementById('printingStageInfo').style.display = '';
-    resetToWelcome();
-  } else {
-    goTo('preview');
-  }
-});
-
-function loadImage(src){
-  return new Promise((resolve, reject)=>{
-    const img = new Image();
-    img.onload = ()=>resolve(img);
-    img.onerror = reject;
-    img.src = src;
+  hit.addEventListener('pointerdown',e=>{
+    e.preventDefault();e.stopPropagation();
+    dragging=true;hit.classList.add('dragging');
+    try{hit.setPointerCapture(e.pointerId);}catch(err){}
+    // Pin the tooltip just below the fixed header (not at the cursor) so it
+    // never overlaps the per-row percentage badges while dragging.
+    tipTop=document.getElementById('gantt-fixed-hdr').getBoundingClientRect().bottom+8;
+    floatTip=document.createElement('div');floatTip.className='now-line-floating-tip';
+    document.body.appendChild(floatTip);
+    buildCache();moveTo(e.clientX);
   });
+  hit.addEventListener('pointermove',e=>{if(dragging){e.preventDefault();moveTo(e.clientX);}});
+  hit.addEventListener('pointerup',endDrag);
+  hit.addEventListener('pointercancel',endDrag);
 }
 
-// 2×3：3張照片，左右各印一份（共6格），框為552×470px，置上，下方有空間做裝飾
-function draw2x3Layout(ctx, images){
-  const FRAME_W = 552, FRAME_H = 470;
-  const scale = OUT_W / (FRAME_W * 2 + GRID_GAP * 3);
-  const cellW = Math.round(FRAME_W * scale);
-  const cellH = Math.round(FRAME_H * scale);
-  const gap = Math.round(GRID_GAP * scale);
-  for(let col = 0; col < 2; col++){
-    const x = gap + col * (cellW + gap);
-    for(let row = 0; row < 3; row++){
-      const y = gap + row * (cellH + gap);
-      drawImageCover(ctx, images[row], x, y, cellW, cellH);
-    }
-  }
+/* ── Small helpers ── */
+function makeRowName(val,onBlur,onInput){
+  const s=document.createElement('span');s.className='row-name';s.contentEditable='true';s.textContent=val;
+  // Live-sync while typing: update the bar's label text directly (no
+  // renderGantt — a full re-render would destroy this contentEditable
+  // node mid-keystroke and break the caret/IME composition).
+  if(onInput)s.addEventListener('input',()=>onInput(s.textContent));
+  s.addEventListener('blur',()=>{onBlur(s.textContent);renderGantt();});
+  s.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();s.blur();}});
+  return s;
 }
+function makeRowAct(svg,title,cls=''){
+  const b=document.createElement('button');b.className='row-act'+(cls?' '+cls:'');b.title=title;b.innerHTML=svg;return b;
+}
+function makeCollapse(closed){
+  const b=document.createElement('button');b.className='collapse-btn'+(closed?' closed':'');
+  b.innerHTML=`<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>`;return b;
+}
+function pencilSvg(){return`<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;}
+function trashSvg(){return`<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1.2 14.1a2 2 0 0 1-2 1.9H8.2a2 2 0 0 1-2-1.9L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;}
 
-// 2×2：4張照片各佔一格，框為552×552px，左二右二，置中，上下有空間
-function draw2x2Layout(ctx, images){
-  const FRAME_W = 552, FRAME_H = 552;
-  const scale = OUT_W / (FRAME_W * 2 + GRID_GAP * 3);
-  const cellW = Math.round(FRAME_W * scale);
-  const cellH = Math.round(FRAME_H * scale);
-  const gap = Math.round(GRID_GAP * scale);
-  const totalGridH = cellH * 2 + gap * 3;
-  const startY = Math.round((OUT_H - totalGridH) / 2);
-  images.forEach((img, i)=>{
-    const col = i % 2, row = Math.floor(i/2);
-    const x = gap + col*(cellW+gap);
-    const y = startY + gap + row*(cellH+gap);
-    drawImageCover(ctx, img, x, y, cellW, cellH);
+/* ═══ PROJECT EDITOR POPUP — edits project name/color + all its builds & their items ═══ */
+function openProjectEditor(proj,pi){
+  const popup=document.getElementById('row-editor-popup');popup.innerHTML='';
+  const ov=document.getElementById('rep-overlay');
+  if(!proj.color)proj.color=DEFAULT_COLOR;
+
+  /* ── Header: close / proj name / color dot / save / delete ── */
+  const hdr=document.createElement('div');hdr.className='rep-header';
+  const backBtn=document.createElement('button');backBtn.className='rep-icon-btn';backBtn.title='Close';
+  backBtn.innerHTML=`<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+  backBtn.addEventListener('click',closeRowEditor);
+  const titleWrap=document.createElement('div');titleWrap.className='rep-header-title-wrap';
+  const colorDot=document.createElement('div');colorDot.className='rep-title-color-dot';colorDot.style.background=proj.color;colorDot.title='Change project color';
+  const titleEl=document.createElement('span');titleEl.className='rep-header-title';titleEl.contentEditable='true';titleEl.textContent=proj.name;
+  titleEl.addEventListener('blur',()=>{proj.name=titleEl.textContent||proj.name;renderGantt();});
+  titleEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();titleEl.blur();}});
+  titleWrap.append(colorDot,titleEl);
+  const applyBtn=document.createElement('button');applyBtn.className='rep-icon-btn rep-apply';applyBtn.title='Save & Close';
+  applyBtn.innerHTML=`<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`;
+  applyBtn.addEventListener('click',()=>{proj.name=titleEl.textContent||proj.name;closeRowEditor();renderGantt();});
+  const delProjBtn=document.createElement('button');delProjBtn.className='rep-icon-btn rep-del';delProjBtn.title='Delete Project';
+  delProjBtn.innerHTML=trashSvg();
+  delProjBtn.addEventListener('click',e=>{e.stopPropagation();confirmDelete('Delete project "'+proj.name+'"?',()=>{projects.splice(pi,1);closeRowEditor();renderGantt();});});
+  const hActs=document.createElement('div');hActs.className='rep-header-actions';hActs.append(delProjBtn,applyBtn);
+  hdr.append(backBtn,titleWrap,hActs);popup.appendChild(hdr);
+
+  /* Project color wheel */
+  const projWheelPanel=document.createElement('div');projWheelPanel.className='rep-inline-wheel';popup.appendChild(projWheelPanel);
+  colorDot.addEventListener('click',ev=>{
+    ev.stopPropagation();
+    const open=projWheelPanel.style.display==='flex';
+    projWheelPanel.style.display=open?'none':'flex';
+    if(!open)buildWheelPanel(proj,colorDot,projWheelPanel);
   });
-}
 
-async function composeAndPrint(){
-  // 重置狀態
-  document.getElementById('printingStageInfo').style.display = '';
-  document.getElementById('progressFill').style.width = '0%';
-  document.getElementById('donePopup').classList.remove('open');
+  /* ── Build list section ── */
+  const buildsSec=document.createElement('div');buildsSec.className='rep-section';buildsSec.textContent='Builds';popup.appendChild(buildsSec);
+  const buildsContainer=document.createElement('div');buildsContainer.id='pe-builds-container';popup.appendChild(buildsContainer);
 
-  const canvas = document.getElementById('resultCanvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = OUT_W; canvas.height = OUT_H;
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, OUT_W, OUT_H);
-
-  const images = await Promise.all(state.shots.map(loadImage));
-
-  if(state.layout === '2x3'){
-    draw2x3Layout(ctx, images);
-  } else {
-    draw2x2Layout(ctx, images);
-  }
-
-  if(state.selectedFrame && state.selectedFrame.src){
-    const frameImg = await loadImage(state.selectedFrame.src).catch(()=>null);
-    if(frameImg) ctx.drawImage(frameImg, 0, 0, OUT_W, OUT_H);
-  }
-
-  const finalDataUrl = canvas.toDataURL('image/jpeg', 0.92);
-  sendEmailInBackground(finalDataUrl);
-  await animateProgress(30000);
-  await showDownloadStage(finalDataUrl);
-}
-
-function animateProgress(duration){
-  return new Promise(resolve=>{
-    const fill = document.getElementById('progressFill');
-    const start = performance.now();
-    function tick(now){
-      const p = Math.min(1,(now-start)/duration);
-      fill.style.width = (p*100)+'%';
-      if(p<1) requestAnimationFrame(tick); else resolve();
+  function renderBuilds(){
+    buildsContainer.innerHTML='';
+    if(!proj.subgroups.length){
+      const em=document.createElement('div');em.style.cssText='font-size:10px;color:var(--text-muted);padding:4px 0';
+      em.textContent='No builds yet — click + Add Build';buildsContainer.appendChild(em);
     }
-    requestAnimationFrame(tick);
+    proj.subgroups.forEach((sg,si)=>{
+      if(!sg.color)sg.color=proj.color||DEFAULT_COLOR;
+
+      /* Build card */
+      const card=document.createElement('div');card.style.cssText='border:1px solid var(--divider);border-radius:10px;padding:8px 10px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px;background:var(--accent-lt)';
+
+      /* Build header row: color dot + name + delete */
+      const bHdr=document.createElement('div');bHdr.style.cssText='display:flex;align-items:center;gap:6px';
+      const bColorDot=document.createElement('div');bColorDot.className='rep-title-color-dot';bColorDot.style.cssText=`background:${sg.color};width:12px;height:12px;cursor:pointer`;bColorDot.title='Change build color';
+      const bName=document.createElement('input');bName.type='text';bName.className='rep-input';bName.value=sg.name;bName.style.cssText='font-size:11px;font-weight:700;height:26px;padding:2px 7px;flex:1';
+      bName.addEventListener('input',()=>{sg.name=bName.value;renderGantt();});
+      const bDel=document.createElement('button');bDel.className='rep-icon-btn rep-del';bDel.title='Delete Build';bDel.style.cssText='width:22px;height:22px';
+      bDel.innerHTML=`<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+      bDel.addEventListener('click',()=>{confirmDelete('Delete build "'+sg.name+'"?',()=>{proj.subgroups.splice(si,1);renderBuilds();renderGantt();});});
+      bHdr.append(bColorDot,bName,bDel);
+
+      /* Build color wheel */
+      const bWheelPanel=document.createElement('div');bWheelPanel.className='rep-inline-wheel';bWheelPanel.style.display='none';
+      bColorDot.addEventListener('click',ev=>{
+        ev.stopPropagation();
+        const open=bWheelPanel.style.display==='flex';
+        bWheelPanel.style.display=open?'none':'flex';
+        if(!open)buildWheelPanel(sg,bColorDot,bWheelPanel);
+      });
+
+      /* Items list */
+      const itemsLabel=document.createElement('div');itemsLabel.style.cssText='font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px';itemsLabel.textContent='Items';
+      const itemList=document.createElement('div');
+      function renderItems(){
+        itemList.innerHTML='';
+        (sg.bars||[]).forEach((bar,bi)=>{
+          const row=document.createElement('div');row.className='rep-bar-item';row.style.marginBottom='3px';
+          const tag=document.createElement('input');tag.className='rep-bar-tag';tag.type='text';tag.placeholder='Item name';tag.value=bar.label||'';
+          tag.addEventListener('input',()=>{bar.label=tag.value;renderGantt();});
+          const rangeBtn=document.createElement('button');rangeBtn.className='rep-bar-range-btn';
+          rangeBtn.textContent=fmtDate(bar.start)+'  →  '+fmtDate(bar.end);
+          rangeBtn.addEventListener('click',ev=>{ev.stopPropagation();openDateRangePicker(rangeBtn,bar,()=>{renderItems();renderGantt();});});
+          const db=document.createElement('button');db.className='rep-bar-del';db.title='Delete';
+          db.innerHTML=`<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+          db.addEventListener('click',()=>{sg.bars.splice(bi,1);renderItems();renderGantt();});
+          row.append(tag,rangeBtn,db);itemList.appendChild(row);
+        });
+      }
+      renderItems();
+      const addItemBtn=document.createElement('button');addItemBtn.className='rep-add-bar';addItemBtn.textContent='+ Add Item';addItemBtn.style.marginTop='2px';
+      addItemBtn.addEventListener('click',()=>{
+        const today=getToday();
+        const s2=new Date(today);const e2=new Date(today);e2.setDate(e2.getDate()+14);
+        sg.bars.push({id:newId(),label:'',start:s2,end:e2});renderItems();renderGantt();
+      });
+
+      card.append(bHdr,bWheelPanel,itemsLabel,itemList,addItemBtn);
+      buildsContainer.appendChild(card);
+    });
+  }
+  renderBuilds();
+
+  /* Add Build button */
+  const addBuildBtn=document.createElement('button');addBuildBtn.className='rep-add-bar';addBuildBtn.textContent='+ Add Build';addBuildBtn.style.marginTop='4px';
+  addBuildBtn.addEventListener('click',()=>{
+    proj.subgroups.push({id:newId(),name:'New Build',color:proj.color||DEFAULT_COLOR,bars:[]});
+    renderBuilds();renderGantt();
   });
+  popup.appendChild(addBuildBtn);
+
+  popup.style.display='flex';ov.classList.add('show');
 }
 
-async function sendEmailInBackground(finalDataUrl){
-  try{
-    if(EMAILJS_CONFIG.enabled && window.emailjs){
-      await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
-        to_email: EMAILJS_CONFIG.toEmail, image_data: finalDataUrl,
-        time: new Date().toLocaleString()
-      }, EMAILJS_CONFIG.publicKey);
+/* ═══ ROW EDITOR POPUP ═══ */
+/* ═══ BUILD EDITOR POPUP — edits a single Build's name/color and its Items ═══ */
+function openRowEditor(owner,pi,si){
+  const popup=document.getElementById('row-editor-popup');popup.innerHTML='';
+  const ov=document.getElementById('rep-overlay');
+  if(!owner.color)owner.color=projects[pi].color||DEFAULT_COLOR;
+
+  const hdr=document.createElement('div');hdr.className='rep-header';
+  const backBtn=document.createElement('button');backBtn.className='rep-icon-btn';backBtn.title='Close';
+  backBtn.innerHTML=`<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+  backBtn.addEventListener('click',closeRowEditor);
+
+  // Title block: color dot + editable name, shown directly in the header
+  const titleWrap=document.createElement('div');titleWrap.className='rep-header-title-wrap';
+  const colorDot=document.createElement('div');colorDot.className='rep-title-color-dot';colorDot.style.background=owner.color||DEFAULT_COLOR;colorDot.title='Change color';
+  const titleEl=document.createElement('span');titleEl.className='rep-header-title';titleEl.contentEditable='true';titleEl.id='rep-name';titleEl.textContent=owner.name||'';
+  titleEl.addEventListener('blur',()=>{owner.name=titleEl.textContent||owner.name;});
+  titleEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();titleEl.blur();}});
+  titleWrap.append(colorDot,titleEl);
+
+  const applyBtn=document.createElement('button');applyBtn.className='rep-icon-btn rep-apply';applyBtn.title='Save';
+  applyBtn.innerHTML=`<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`;
+  applyBtn.addEventListener('click',()=>{owner.name=titleEl.textContent||owner.name;closeRowEditor();renderGantt();});
+  const delBtn=document.createElement('button');delBtn.className='rep-icon-btn rep-del';delBtn.title='Delete';
+  delBtn.innerHTML=trashSvg();
+  delBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    confirmDelete('Delete "'+owner.name+'"?',()=>{projects[pi].subgroups.splice(si,1);closeRowEditor();renderGantt();});
+  });
+  const hActs=document.createElement('div');hActs.className='rep-header-actions';hActs.append(delBtn,applyBtn);
+  hdr.append(backBtn,titleWrap,hActs);popup.appendChild(hdr);
+
+  // Inline color wheel — toggled by clicking the color dot in the header
+  const wheelPanel=document.createElement('div');wheelPanel.className='rep-inline-wheel';popup.appendChild(wheelPanel);
+  colorDot.addEventListener('click',ev=>{
+    ev.stopPropagation();
+    const open=wheelPanel.style.display==='flex';
+    wheelPanel.style.display=open?'none':'flex';
+    if(!open)buildWheelPanel(owner,colorDot,wheelPanel);
+  });
+
+  // Item list
+  const dsec=document.createElement('div');dsec.className='rep-section';dsec.textContent='Item';popup.appendChild(dsec);
+  const blist=document.createElement('div');blist.id='rep-bar-list';
+  function renderBarList(){
+    blist.innerHTML='';
+    if(!owner.bars||!owner.bars.length){
+      const em=document.createElement('div');em.style.cssText='font-size:10px;color:var(--text-muted);padding:2px 0';
+      em.textContent='No item — click + Add';blist.appendChild(em);
     }
-  }catch(err){ console.error('Email 傳送失敗', err); }
-}
-
-async function uploadToImgbb(dataUrl){
-  const base64 = dataUrl.split(',')[1];
-  const form = new FormData(); form.append('image', base64);
-  const resp = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_CONFIG.apiKey}`,{ method:'POST', body:form });
-  const json = await resp.json();
-  if(json && json.success) return json.data.url || json.data.display_url;
-  throw new Error('imgbb upload failed');
-}
-
-async function showDownloadStage(finalDataUrl){
-  document.getElementById('printingStageInfo').style.display = 'none';
-  document.getElementById('printNavTitle').textContent = '努力準備中';
-
-  const popup = document.getElementById('donePopup');
-  const qrWrap = document.getElementById('popupQrWrap');
-  const qrLabel = document.getElementById('popupQrLabel');
-  const qrImg = document.getElementById('popupQrImg');
-
-  // 用 QR Server API 產生 QR code（穩定、免費、不需金鑰）— 純 <img> src
-  function makeQrCodeUrl(url){
-    const encoded = encodeURIComponent(url);
-    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encoded}`;
+    (owner.bars||[]).forEach((bar,bi)=>{
+      const item=document.createElement('div');item.className='rep-bar-item';
+      const tag=document.createElement('input');tag.className='rep-bar-tag';tag.type='text';tag.placeholder='Tag';tag.value=bar.label||'';
+      tag.addEventListener('input',()=>{bar.label=tag.value;renderGantt();});
+      const rangeBtn=document.createElement('button');rangeBtn.className='rep-bar-range-btn';
+      rangeBtn.textContent=fmtDate(bar.start)+'  →  '+fmtDate(bar.end);
+      rangeBtn.addEventListener('click',ev=>{ev.stopPropagation();openDateRangePicker(rangeBtn,bar,()=>{renderBarList();renderGantt();});});
+      const db=document.createElement('button');db.className='rep-bar-del';db.title='Delete';
+      db.innerHTML=`<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+      db.addEventListener('click',()=>{owner.bars.splice(bi,1);renderBarList();renderGantt();});
+      item.append(tag,rangeBtn,db);blist.appendChild(item);
+    });
   }
+  renderBarList();popup.appendChild(blist);
+  const addBarBtn=document.createElement('button');addBarBtn.className='rep-add-bar';addBarBtn.textContent='+ Add Item';
+  addBarBtn.addEventListener('click',()=>{
+    const s=new Date(viewStart),e=new Date(viewEnd),span=e-s;
+    owner.bars.push({id:newId(),label:'',start:new Date(s.getTime()+span*0.1),end:new Date(s.getTime()+span*0.4)});
+    renderBarList();renderGantt();
+  });
+  popup.appendChild(addBarBtn);
 
-  // 開啟 popup
-  popup.classList.add('open');
-
-  if(IMGBB_CONFIG.enabled){
-    qrLabel.textContent = '正在產生下載連結…';
-    qrWrap.style.display = '';
-    try{
-      const url = await uploadToImgbb(finalDataUrl);
-      qrImg.src = makeQrCodeUrl(url);
-      qrLabel.textContent = '';
-    }catch(err){
-      console.error('上傳失敗', err);
-      qrWrap.style.display = 'none';
-      qrLabel.textContent = '無法上傳照片，請改用 Email 接收';
-    }
-  } else {
-    // imgbb 尚未設定時的示範 QR（指向品牌官網）
-    qrImg.src = makeQrCodeUrl('https://pluddie.studio');
-    qrWrap.style.display = '';
-    qrLabel.textContent = '設定 imgbb 後即可掃碼下載照片';
-  }
+  popup.style.display='flex';ov.classList.add('show');
+}
+function closeRowEditor(){
+  document.getElementById('row-editor-popup').style.display='none';
+  document.getElementById('rep-overlay').classList.remove('show');
 }
 
-document.getElementById('btnNextShot').addEventListener('click', ()=>{
-  document.getElementById('donePopup').classList.remove('open');
-  resetToWelcome();
+/* ═══ DATE RANGE CALENDAR PICKER ═══
+   Single calendar: first click sets start, second click sets end
+   (auto-swaps if end < start). Used for Item date ranges. Click outside
+   or Done to close. */
+let drpState=null;
+function openDateRangePicker(anchorEl,bar,onChange){
+  const existing=document.getElementById('date-range-picker');
+  if(existing)existing.remove();
+
+  const pop=document.createElement('div');pop.id='date-range-picker';pop.className='drp-popup';
+  drpState={
+    bar,onChange,
+    pendingStart:new Date(bar.start),
+    pendingEnd:new Date(bar.end),
+    viewMonth:new Date(bar.start.getFullYear(),bar.start.getMonth(),1),
+    clickStage:'start'
+  };
+
+  renderDRP(pop);
+  document.body.appendChild(pop);
+
+  const popW=pop.offsetWidth,popH=pop.offsetHeight;
+  const rect=anchorEl.getBoundingClientRect();
+  let top=rect.bottom+6,left=rect.left;
+  if(left+popW>window.innerWidth-8)left=window.innerWidth-popW-8;
+  if(left<8)left=8;
+  if(top+popH>window.innerHeight-8)top=rect.top-popH-6;
+  if(top<8)top=8;
+  pop.style.top=top+'px';pop.style.left=left+'px';
+
+  setTimeout(()=>{document.addEventListener('mousedown',drpOutsideClick);},0);
+}
+function drpOutsideClick(e){
+  const pop=document.getElementById('date-range-picker');
+  if(pop&&!pop.contains(e.target)){
+    document.removeEventListener('mousedown',drpOutsideClick);
+    pop.remove();
+  }
+}
+function renderDRP(pop){
+  pop.innerHTML='';
+  const st=drpState;
+
+  const hdr=document.createElement('div');hdr.className='drp-hdr';
+  const prevBtn=document.createElement('button');prevBtn.className='drp-nav-btn';prevBtn.textContent='‹';
+  prevBtn.addEventListener('click',e=>{e.stopPropagation();st.viewMonth=new Date(st.viewMonth.getFullYear(),st.viewMonth.getMonth()-1,1);renderDRP(pop);});
+  const mLbl=document.createElement('div');mLbl.className='drp-month-lbl';
+  mLbl.textContent=st.viewMonth.toLocaleString('en',{month:'long'})+' '+st.viewMonth.getFullYear();
+  const nextBtn=document.createElement('button');nextBtn.className='drp-nav-btn';nextBtn.textContent='›';
+  nextBtn.addEventListener('click',e=>{e.stopPropagation();st.viewMonth=new Date(st.viewMonth.getFullYear(),st.viewMonth.getMonth()+1,1);renderDRP(pop);});
+  hdr.append(prevBtn,mLbl,nextBtn);pop.appendChild(hdr);
+
+  const rangeDisp=document.createElement('div');rangeDisp.className='drp-range-display';
+  rangeDisp.textContent=fmtDate(st.pendingStart)+'  →  '+fmtDate(st.pendingEnd);
+  pop.appendChild(rangeDisp);
+
+  const dow=document.createElement('div');dow.className='drp-dow-row';
+  ['S','M','T','W','T','F','S'].forEach(d=>{const c=document.createElement('div');c.className='drp-dow';c.textContent=d;dow.appendChild(c);});
+  pop.appendChild(dow);
+
+  const grid=document.createElement('div');grid.className='drp-grid';
+  const first=new Date(st.viewMonth.getFullYear(),st.viewMonth.getMonth(),1);
+  const startOffset=first.getDay();
+  const daysInMonth=new Date(st.viewMonth.getFullYear(),st.viewMonth.getMonth()+1,0).getDate();
+  for(let i=0;i<startOffset;i++){grid.appendChild(document.createElement('div'));}
+  for(let d=1;d<=daysInMonth;d++){
+    const cellDate=new Date(st.viewMonth.getFullYear(),st.viewMonth.getMonth(),d);
+    const cell=document.createElement('button');cell.className='drp-day';cell.textContent=d;
+    const inRange=cellDate>=normalizeDay(st.pendingStart)&&cellDate<=normalizeDay(st.pendingEnd);
+    const isStart=sameDay(cellDate,st.pendingStart),isEnd=sameDay(cellDate,st.pendingEnd);
+    if(inRange)cell.classList.add('in-range');
+    if(isStart)cell.classList.add('range-start');
+    if(isEnd)cell.classList.add('range-end');
+    if(sameDay(cellDate,getToday()))cell.classList.add('is-today');
+    cell.addEventListener('click',e=>{
+      e.stopPropagation();
+      if(st.clickStage==='start'){
+        st.pendingStart=cellDate;st.pendingEnd=cellDate;st.clickStage='end';
+      }else{
+        if(cellDate<st.pendingStart){st.pendingEnd=st.pendingStart;st.pendingStart=cellDate;}
+        else{st.pendingEnd=cellDate;}
+        st.clickStage='start';
+      }
+      renderDRP(pop);
+    });
+    grid.appendChild(cell);
+  }
+  pop.appendChild(grid);
+
+  const actions=document.createElement('div');actions.className='drp-actions';
+  const doneBtn=document.createElement('button');doneBtn.className='drp-done-btn';doneBtn.textContent='Done';
+  doneBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    st.bar.start=st.pendingStart;st.bar.end=st.pendingEnd;
+    pop.remove();
+    document.removeEventListener('mousedown',drpOutsideClick);
+    st.onChange();
+  });
+  actions.appendChild(doneBtn);pop.appendChild(actions);
+}
+function normalizeDay(d){const r=new Date(d);r.setHours(0,0,0,0);return r;}
+function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+
+/* ═══ INLINE COLOR WHEEL ═══ */
+function buildWheelPanel(owner,colorCircle,panel){
+  panel.innerHTML='';
+  let {h,s,l}=hexToHSL(owner.color||DEFAULT_COLOR);let curColor=owner.color||DEFAULT_COLOR;
+  const cwWrap=document.createElement('div');cwWrap.className='cwp-canvas-wrap';
+  const canvas=document.createElement('canvas');canvas.width=130;canvas.height=130;canvas.style.cssText='border-radius:50%;cursor:crosshair;display:block';
+  cwWrap.appendChild(canvas);panel.appendChild(cwWrap);
+  const hexRow=document.createElement('div');hexRow.className='cwp-preview-row';
+  const hexPrev=document.createElement('div');hexPrev.className='cwp-preview';hexPrev.style.background=curColor;
+  const hexInput=document.createElement('input');hexInput.className='cwp-hex-input';hexInput.value=curColor;hexInput.maxLength=7;
+  hexInput.addEventListener('input',()=>{if(/^#[0-9a-fA-F]{6}$/.test(hexInput.value)){curColor=hexInput.value;const r=hexToHSL(curColor);h=r.h;s=r.s;l=r.l;commit(false);}});
+  hexRow.append(hexPrev,hexInput);panel.appendChild(hexRow);
+  function draw(){
+    const ctx=canvas.getContext('2d'),cx=65,cy=65,r=58;ctx.clearRect(0,0,130,130);
+    for(let a=0;a<360;a++){ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,(a-1)*Math.PI/180,(a+1)*Math.PI/180);ctx.closePath();ctx.fillStyle=`hsl(${a},${s}%,${l}%)`;ctx.fill();}
+    const grd=ctx.createRadialGradient(cx,cy,0,cx,cy,r);grd.addColorStop(0,'rgba(255,255,255,1)');grd.addColorStop(.5,'rgba(255,255,255,0)');
+    ctx.fillStyle=grd;ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.fill();
+    const a=(h-90)*Math.PI/180,ir=r*0.72,ix=cx+ir*Math.cos(a),iy=cy+ir*Math.sin(a);
+    ctx.beginPath();ctx.arc(ix,iy,5,0,2*Math.PI);ctx.strokeStyle='#fff';ctx.lineWidth=2.2;ctx.stroke();ctx.fillStyle=curColor;ctx.fill();
+  }
+  canvas.onclick=function(ev){const rect=canvas.getBoundingClientRect(),mx=ev.clientX-rect.left-65,my=ev.clientY-rect.top-65;h=(Math.round(Math.atan2(my,mx)*180/Math.PI+90+360)%360);curColor=hslToHex(h,s,l);commit();};
+  function commit(upHex=true){owner.color=curColor;colorCircle.style.background=curColor;hexPrev.style.background=curColor;if(upHex)hexInput.value=curColor;draw();renderGantt();}
+  draw();
+}
+function hexToHSL(hex){
+  let r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;let h=0,sv=0,l=(max+min)/2;
+  if(d){sv=d/(1-Math.abs(2*l-1));switch(max){case r:h=((g-b)/d+6)%6;break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;}h=Math.round(h*60);}
+  return{h:Math.round(h),s:Math.round(sv*100),l:Math.round(l*100)};
+}
+function hslToHex(h,s,l){
+  s/=100;l/=100;const a=s*Math.min(l,1-l);
+  const f=n=>{const k=(n+h/30)%12,c=l-a*Math.max(-1,Math.min(k-3,9-k,1));return Math.round(255*c).toString(16).padStart(2,'0');};
+  return'#'+f(0)+f(8)+f(4);
+}
+
+/* ═══ CONFIRM ═══ */
+function confirmDelete(msg,cb){confirmCb=cb;document.getElementById('confirm-msg').textContent=msg;document.getElementById('confirm-overlay').classList.add('show');}
+document.getElementById('confirm-yes').addEventListener('click',()=>{document.getElementById('confirm-overlay').classList.remove('show');if(confirmCb){confirmCb();confirmCb=null;}});
+document.getElementById('confirm-no').addEventListener('click',()=>{document.getElementById('confirm-overlay').classList.remove('show');confirmCb=null;});
+
+/* ═══ ADD HELPERS ═══ */
+function addProject(){
+  const proj={id:newId(),name:'New Project',color:DEFAULT_COLOR,collapsed:false,subgroups:[]};
+  projects.push(proj);
+  renderGantt();
+  // Open the project editor immediately so user can start adding builds
+  openProjectEditor(proj,projects.length-1);
+}
+
+/* ═══ UPDATES ═══ */
+const STATUS_CYCLE={green:'yellow',yellow:'red',red:'green'};
+function renderUpdates(){
+  const body=document.getElementById('updates-body');body.innerHTML='';
+  updates.forEach(u=>{
+    const item=document.createElement('div');item.className='update-item';
+    const light=document.createElement('div');light.className='status-light '+u.status;
+    light.addEventListener('click',()=>{u.status=STATUS_CYCLE[u.status];light.className='status-light '+u.status;});
+    const txt=document.createElement('div');txt.className='update-text';txt.contentEditable='true';txt.textContent=u.text;
+    txt.addEventListener('blur',()=>u.text=txt.textContent);
+    txt.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addUpdate();}});
+    const del=document.createElement('button');del.className='update-del';del.textContent='✕';
+    del.addEventListener('click',()=>{updates=updates.filter(x=>x.id!==u.id);renderUpdates();});
+    item.append(light,txt,del);body.appendChild(item);
+  });
+  const addRow=document.createElement('div');addRow.className='update-add-row';
+  addRow.innerHTML=`<div class="status-light green" style="opacity:.35;flex-shrink:0"></div><span>Click here or press Enter to add an update…</span>`;
+  addRow.addEventListener('click',addUpdate);body.appendChild(addRow);
+}
+function addUpdate(){
+  updates.push({id:newId(),status:'green',text:''});renderUpdates();
+  const items=document.querySelectorAll('.update-text');if(items.length)items[items.length-1].focus();
+}
+
+/* ═══ SIDEBAR ═══ */
+const sidebar=document.getElementById('sidebar'),sideOverlay=document.getElementById('sidebar-overlay');
+document.getElementById('settings-btn').addEventListener('click',()=>{sidebar.classList.add('open');sideOverlay.classList.add('show');});
+function closeSidebar(){sidebar.classList.remove('open');sideOverlay.classList.remove('show');}
+document.getElementById('sidebar-close').addEventListener('click',closeSidebar);
+sideOverlay.addEventListener('click',closeSidebar);
+document.getElementById('theme-toggle').addEventListener('change',function(){document.documentElement.dataset.theme=this.checked?'dark':'light';});
+document.getElementById('export-btn').addEventListener('click',()=>{
+  /* Build the export from a CLEANED CLONE of the live document, not a
+     raw outerHTML snapshot — that would freeze whatever UI state happens
+     to be open right now, including the sidebar itself (since that's
+     literally where this button lives). Clone, force-close every
+     overlay/popup in the clone only (the live page you're looking at is
+     untouched), inject the CURRENT data as real JS literals into the
+     clone's <script> text (Date objects become `new Date(...)` calls,
+     not strings), then download that. This is the ONLY place your data
+     gets written to a file — nothing is auto-saved to the browser, so a
+     plain refresh always goes back to this default sample data unless
+     you Export. */
+  const clone=document.documentElement.cloneNode(true);
+  const closeSel=id=>{const el=clone.querySelector('#'+id);if(el)el.classList.remove('open','show');};
+  closeSel('sidebar');closeSel('sidebar-overlay');closeSel('rep-overlay');closeSel('confirm-overlay');
+  const hideSel=id=>{const el=clone.querySelector('#'+id);if(el)el.style.display='none';};
+  hideSel('row-editor-popup');hideSel('gantt-settings-panel');
+  clone.querySelectorAll('#date-range-picker').forEach(el=>el.remove());
+
+  const scriptEl=clone.querySelector('script');
+  let js=scriptEl.textContent;
+  js=js.replace(/let projects=\[[\s\S]*?\n\];/,'let projects='+jsLiteral(projects)+';');
+  js=js.replace(/let updates=\[[\s\S]*?\n\];/,'let updates='+jsLiteral(updates)+';');
+  scriptEl.textContent=js;
+
+  downloadHtml('<!DOCTYPE html>\n'+clone.outerHTML);
 });
+/* Like JSON.stringify, but Date instances become `new Date(...)` source
+   text instead of quoted ISO strings, so the result is valid executable
+   JS (not just JSON data) that reconstructs real Date objects when the
+   exported file is opened. */
+function jsLiteral(val){
+  if(val instanceof Date)return 'new Date('+val.getTime()+')';
+  if(Array.isArray(val))return '['+val.map(jsLiteral).join(',')+']';
+  if(val&&typeof val==='object'){
+    return '{'+Object.keys(val).map(k=>JSON.stringify(k)+':'+jsLiteral(val[k])).join(',')+'}';
+  }
+  return JSON.stringify(val);
+}
+function downloadHtml(htmlStr){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([htmlStr],{type:'text/html'}));
+  a.download='project-dashboard.html';a.click();URL.revokeObjectURL(a.href);
+}
+const todayDateInput=document.getElementById('today-date-input');
+function refreshTodayInput(){todayDateInput.value=fmtDate(getToday());}
+refreshTodayInput();
+/* Plain text input — no native browser date picker. Accepts YYYY-MM-DD
+   typed manually; validates before committing, otherwise reverts to the
+   last valid value so the field never holds garbage. */
+function commitTodayInput(){
+  const v=todayDateInput.value.trim();
+  if(!v){simulatedToday=null;refreshTodayInput();renderGantt();return;}
+  const m=v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m){refreshTodayInput();return;} // invalid format — revert, don't touch state
+  const y=+m[1],mo=+m[2],d=+m[3];
+  const parsed=new Date(y,mo-1,d);
+  if(parsed.getFullYear()!==y||parsed.getMonth()!==mo-1||parsed.getDate()!==d){
+    refreshTodayInput();return; // invalid calendar date (e.g. 2026-02-31) — revert
+  }
+  simulatedToday=parsed;
+  refreshTodayInput();
+  renderGantt(); // re-syncs: NOW-line position, every bar's progress fill, today-wk header highlight
+}
+todayDateInput.addEventListener('blur',commitTodayInput);
+todayDateInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();todayDateInput.blur();}});
+
+/* ═══ YEAR NAV ═══ */
+document.getElementById('nav-prev').addEventListener('click',()=>{scrollToYear(viewYear-1);});
+document.getElementById('nav-next').addEventListener('click',()=>{scrollToYear(viewYear+1);});
+document.getElementById('nav-today').addEventListener('click',()=>{scrollToToday();});
+
+/* ═══ ZOOM ═══ */
+function applyZoom(){
+  document.documentElement.style.setProperty('--rh-proj',RH_PROJ+'px');
+  document.documentElement.style.setProperty('--rh-sub',RH_SUB+'px');
+}
+document.getElementById('zoom-h').addEventListener('input',function(){
+  WEEK_W=parseInt(this.value);document.getElementById('zoom-h-val').textContent=this.value;renderGantt();
+});
+document.getElementById('zoom-v').addEventListener('input',function(){
+  const v=parseInt(this.value);RH_PROJ=v;RH_SUB=Math.round(v*0.83);
+  document.getElementById('zoom-v-val').textContent=v;applyZoom();renderGantt();
+});
+
+/* ═══ GANTT SETTINGS PANEL ═══ */
+const gsPanel=document.getElementById('gantt-settings-panel');
+const gsBtn=document.getElementById('gantt-settings-btn');
+gsBtn.addEventListener('click',e=>{
+  e.stopPropagation();
+  gsPanel.style.display=gsPanel.style.display==='none'?'flex':'none';
+});
+document.addEventListener('click',e=>{
+  if(gsPanel.style.display!=='none'&&!gsPanel.contains(e.target)&&e.target!==gsBtn&&!gsBtn.contains(e.target)){
+    gsPanel.style.display='none';
+  }
+});
+document.getElementById('toggle-build-name').addEventListener('change',function(){showBuildName=this.checked;renderGantt();});
+document.getElementById('toggle-item-name').addEventListener('change',function(){showItemName=this.checked;renderGantt();});
+document.getElementById('toggle-today-line').addEventListener('change',function(){showTodayLine=this.checked;renderGantt();});
+document.getElementById('toggle-progress').addEventListener('change',function(){showProgress=this.checked;renderGantt();});
+
+/* ═══ CLOSE POPUP ═══ */
+document.getElementById('rep-overlay').addEventListener('click',closeRowEditor);
+
+/* ═══ PROJECT TARGET — rich text toolbar ═══ */
+(function(){
+  const targetText=document.getElementById('target-text');
+  const colorInput=document.getElementById('target-color-input');
+  const colorSwatch=document.getElementById('target-color-swatch');
+
+  document.querySelectorAll('.tgt-tool-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      targetText.focus();
+      document.execCommand(btn.dataset.cmd,false,null);
+      updateToolbarState();
+    });
+  });
+
+  colorInput.addEventListener('input',()=>{
+    colorSwatch.style.background=colorInput.value;
+    targetText.focus();
+    document.execCommand('foreColor',false,colorInput.value);
+  });
+
+  // Reflect bold/italic state of the current selection on the toolbar
+  function updateToolbarState(){
+    document.querySelectorAll('.tgt-tool-btn').forEach(btn=>{
+      const isList=btn.dataset.cmd==='insertUnorderedList';
+      const on=isList?document.queryCommandState('insertUnorderedList'):document.queryCommandState(btn.dataset.cmd);
+      btn.classList.toggle('active',!!on);
+    });
+  }
+  document.addEventListener('selectionchange',()=>{
+    if(document.activeElement===targetText)updateToolbarState();
+  });
+})();
+
+/* ═══ LABEL COLUMN FOLD ═══ */
+const ganttWrapEl=document.getElementById('gantt-wrap');
+const foldHandle=document.getElementById('gantt-fold-handle');
+window.LW_EXPANDED=150;
+window.lblCollapsed=false;
+function setLblCollapsed(v){
+  window.lblCollapsed=v;
+  document.documentElement.style.setProperty('--lw',v?'0px':window.LW_EXPANDED+'px');
+  ganttWrapEl.classList.toggle('lbl-collapsed',v);
+  foldHandle.title=v?'Expand project list':'Collapse project list';
+  // The today/NOW line's left offset is baked in as an inline px value at
+  // render time (getLabelW() + week offset). It doesn't auto-follow --lw,
+  // so without a re-render it stays stuck at the old offset and drifts out
+  // of alignment with the bars whenever the label column folds/unfolds.
+  renderGantt();
+}
+foldHandle.addEventListener('click',()=>setLblCollapsed(!window.lblCollapsed));
+// On small screens, start collapsed so the timeline has more room by default
+if(window.innerWidth<=640)setLblCollapsed(true);
+
+/* ═══ INIT ═══ */
+applyZoom();
+renderGantt();
+renderUpdates();
+// Default view: show January of the base year, left-aligned, so the
+// project list starts right at the beginning of the timeline.
+scrollToYear(BASE_YEAR);
 </script>
-
 </body>
 </html>
