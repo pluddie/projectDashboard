@@ -296,13 +296,14 @@
   .slot-inner{ display:flex; align-items:center; justify-content:center; }
   .plus-icon{ width:30px; height:30px; color:var(--muted); }
   .sel-badge{
-    position:absolute; bottom:8px; right:8px; top:auto; left:auto;
-    width:28px; height:28px; border-radius:50%;
+    position:absolute; top:8px; left:8px; bottom:auto; right:auto;
+    width:26px; height:26px; border-radius:50%;
     background:var(--accent);
     display:flex; align-items:center; justify-content:center;
     opacity:0; transform:scale(.6);
     transition:opacity .2s, transform .2s;
-    z-index:2;
+    z-index:3;
+    box-shadow:0 2px 8px #00000040;
   }
   .frame-slot.selected .sel-badge{ opacity:1; transform:scale(1); }
   .sel-badge svg{ width:14px; height:14px; }
@@ -615,15 +616,15 @@
         <button class="layout-option" data-layout="2x3">
           <div class="layout-preview layout-preview-2x3"><span></span><span></span><span></span><span></span><span></span><span></span></div>
           <div class="layout-option-text">
-            <div class="layout-option-title">2×3 拼貼</div>
-            <div class="layout-option-desc">拍 3 張，左右各三張，直式明信片</div>
+            <div class="layout-option-title">2×3 組合</div>
+            <div class="layout-option-desc">共拍 3 張，左右各三張，直式明信片</div>
           </div>
         </button>
         <button class="layout-option" data-layout="2x2">
           <div class="layout-preview layout-preview-2x2"><span></span><span></span><span></span><span></span></div>
           <div class="layout-option-text">
-            <div class="layout-option-title">2×2 拼貼</div>
-            <div class="layout-option-desc">拍 4 張，左二右二，直式明信片</div>
+            <div class="layout-option-title">2×2 組合</div>
+            <div class="layout-option-desc">共拍 4 張，左二右二，直式明信片</div>
           </div>
         </button>
       </div>
@@ -691,7 +692,7 @@
             <svg viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             返回
           </button>
-          <span class="page-title">哎喲～這麼可愛</span>
+          <span class="page-title">太可愛了吧</span>
         </div>
       </div>
       <div class="printing-inner">
@@ -712,7 +713,7 @@
             <svg viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             返回
           </button>
-          <span class="page-title" id="printNavTitle">哎喲～這麼可愛</span>
+          <span class="page-title" id="printNavTitle">太可愛了吧</span>
         </div>
       </div>
 
@@ -977,7 +978,7 @@ function updateShotProgress(){
   } else if(state.shots.length >= SHOTS){
     btn.textContent = '預覽照片';
   } else {
-    btn.innerHTML = `第 ${state.shots.length + 1} 張 &nbsp;›`;
+    btn.innerHTML = `準備拍第 ${state.shots.length + 1} 張`;
   }
 }
 
@@ -1228,7 +1229,7 @@ async function uploadToImgbb(dataUrl){
 
 async function showDownloadStage(finalDataUrl){
   document.getElementById('printingStageInfo').style.display = 'none';
-  document.getElementById('printNavTitle').textContent = '照片完成！';
+  document.getElementById('printNavTitle').textContent = '努力準備中';
 
   const popup = document.getElementById('donePopup');
   const qrWrap = document.getElementById('popupQrWrap');
