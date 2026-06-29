@@ -474,7 +474,7 @@
     0%{ opacity:0; transform:translateY(18px) scale(.96); }
     100%{ opacity:1; transform:translateY(0) scale(1); }
   }
-  .print-box canvas{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .print-box canvas, #previewCanvas{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 
   .printing-text{
     font-family:var(--font);
@@ -664,7 +664,7 @@
             <svg viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             返回
           </button>
-          <span class="page-title">來個大大的微笑！</span>
+          <span class="page-title">姿勢擺好了嗎？</span>
         </div>
       </div>
       <div class="cam-content">
@@ -674,7 +674,6 @@
         <div class="ratio-box cam-box">
           <video id="video" autoplay playsinline muted></video>
           <canvas id="capturedCanvas"></canvas>
-          <img class="frame-overlay-img" id="cameraFrameOverlay" src="" style="display:none">
           <div class="countdown-num" id="countdownNum"></div>
           <div class="flash-overlay" id="flashOverlay"></div>
         </div>
@@ -684,7 +683,28 @@
       </div>
     </div>
 
-    <!-- ===================== 4. 列印中 / 完成 ===================== -->
+    <!-- ===================== 4b. 預覽明信片 ===================== -->
+    <div class="screen" id="screen-preview">
+      <div class="page-header">
+        <div class="page-header-row">
+          <button class="btn-back" id="btnPreviewBack">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            返回
+          </button>
+          <span class="page-title">哎喲～這麼可愛</span>
+        </div>
+      </div>
+      <div class="printing-inner">
+        <div class="ratio-box print-box" id="previewBox">
+          <canvas id="previewCanvas"></canvas>
+        </div>
+      </div>
+      <div class="page-footer">
+        <button class="btn btn-fill" id="btnConfirmPrint">確認列印</button>
+      </div>
+    </div>
+
+    <!-- ===================== 5. 列印中 / 完成 ===================== -->
     <div class="screen" id="screen-printing">
       <div class="page-header">
         <div class="page-header-row">
@@ -692,7 +712,7 @@
             <svg viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             返回
           </button>
-          <span class="page-title" id="printNavTitle">照片列印中</span>
+          <span class="page-title" id="printNavTitle">哎喲～這麼可愛</span>
         </div>
       </div>
 
@@ -737,10 +757,14 @@
 /* =========================================================
    設定區
 ========================================================= */
-const FRAME_DATA = [
-  { id:1, src:null },{ id:2, src:null },{ id:3, src:null },{ id:4, src:null },
-  { id:5, src:null },{ id:6, src:null },{ id:7, src:null },{ id:8, src:null },
+// 兩種版型各自獨立的相框圖庫，各 4 格
+const FRAME_DATA_2x3 = [
+  { id:'a1', src:null },{ id:'a2', src:null },{ id:'a3', src:null },{ id:'a4', src:null },
 ];
+const FRAME_DATA_2x2 = [
+  { id:'b1', src:null },{ id:'b2', src:null },{ id:'b3', src:null },{ id:'b4', src:null },
+];
+function getFramePool(){ return state.layout === '2x3' ? FRAME_DATA_2x3 : FRAME_DATA_2x2; }
 
 const EMAILJS_CONFIG = {
   enabled: false,
@@ -776,6 +800,7 @@ const screens = {
   frames:   document.getElementById('screen-frames'),
   layout:   document.getElementById('screen-layout'),
   camera:   document.getElementById('screen-camera'),
+  preview:  document.getElementById('screen-preview'),
   printing: document.getElementById('screen-printing'),
 };
 
@@ -812,8 +837,9 @@ screens.welcome.addEventListener('click', async ()=>{
   goTo('layout');
 });
 
-/* ---------- 2. 相框選擇 ---------- */
+/* ---------- 3. 相框選擇 ---------- */
 function renderFrameList(){
+  const FRAME_DATA = getFramePool();
   const wrap = document.getElementById('framesScroll');
   wrap.innerHTML = '';
   FRAME_DATA.forEach(frame=>{
@@ -910,11 +936,8 @@ document.getElementById('btnLayoutConfirm').addEventListener('click', ()=>{
   goTo('frames');
 });
 
-/* ---------- 3. 拍照畫面 ---------- */
+/* ---------- 4. 拍照畫面 ---------- */
 async function startCamera(){
-  const overlay = document.getElementById('cameraFrameOverlay');
-  overlay.style.display = 'none'; // 拍照時隱藏相框覆蓋層，拍完才顯示
-
   // 依照版型設定鏡頭框比例
   const camBox = document.querySelector('.cam-box');
   if(state.layout === '2x2'){
@@ -937,7 +960,7 @@ async function startCamera(){
     document.getElementById('video').srcObject = stream;
   } else {
     alert('無法開啟鏡頭。請至瀏覽器的網站設定中允許相機權限後再試一次。');
-    goTo('layout');
+    goTo('frames');
   }
 }
 
@@ -952,14 +975,14 @@ function updateShotProgress(){
   if(state.shots.length === 0){
     btn.textContent = '開始拍照';
   } else if(state.shots.length >= SHOTS){
-    btn.textContent = '列印照片';
+    btn.textContent = '預覽照片';
   } else {
-    btn.textContent = `第 ${state.shots.length + 1} 張`;
+    btn.innerHTML = `第 ${state.shots.length + 1} 張 &nbsp;›`;
   }
 }
 
 function resetCameraState(){
-  state.shotState = 'live'; state.capturedDataUrl = null; state.counting = false;
+  state.shotState = 'live'; state.counting = false;
   document.getElementById('video').classList.remove('hide');
   document.getElementById('capturedCanvas').classList.remove('show');
   document.getElementById('btnConfirmShot').disabled = false;
@@ -974,10 +997,20 @@ document.getElementById('btnCameraBack').addEventListener('click', ()=>{
 
 document.getElementById('btnConfirmShot').addEventListener('click', ()=>{
   if(state.counting) return;
-  if(state.shotState === 'live'){
+  const SHOTS = getShotsRequired();
+  if(state.shotState === 'waiting'){
+    // 已拍完一張，點按鈕決定下一步
+    if(state.shots.length >= SHOTS){
+      // 全部拍完 → 去預覽
+      goToPreview();
+    } else {
+      // 還有下一張 → 重設live並開始倒數
+      resetCameraState();
+      startCountdownThenShoot();
+    }
+  } else if(state.shotState === 'live'){
     startCountdownThenShoot();
   }
-  // 拍完後自動進入下一張，不需手動確認
 });
 
 function setCamButtonsDisabled(d){
@@ -987,7 +1020,7 @@ function setCamButtonsDisabled(d){
 function startCountdownThenShoot(){
   state.counting = true; setCamButtonsDisabled(true);
   const numEl = document.getElementById('countdownNum');
-  let n = 3; showCountdownNumber(numEl, n);
+  let n = 5; showCountdownNumber(numEl, n);
   const interval = setInterval(()=>{
     n--;
     if(n > 0){ showCountdownNumber(numEl, n); }
@@ -1010,39 +1043,18 @@ function takeSnapshot(){
 
   // 拍攝時依照layout決定輸出比例
   const isSquare = state.layout === '2x2';
-  const snapW = isSquare ? 552 : 552;
-  const snapH = isSquare ? 552 : 470;
+  const snapW = 552, snapH = isSquare ? 552 : 470;
   canvas.width = snapW; canvas.height = snapH;
   const ctx = canvas.getContext('2d');
   drawVideoCover(ctx, video, snapW, snapH, true);
   const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
 
-  // 立即接受這張照片
+  // 儲存這張照片
   state.shots.push(dataUrl);
-  state.shotState = 'live';
+  state.shotState = 'waiting'; // 等待使用者點按鈕才進下一張
+  state.counting = false;
+  setCamButtonsDisabled(false);
   updateShotProgress();
-
-  const SHOTS = getShotsRequired();
-  if(state.shots.length >= SHOTS){
-    // 顯示相框覆蓋（若有）
-    const overlay = document.getElementById('cameraFrameOverlay');
-    if(state.selectedFrame && state.selectedFrame.src){
-      overlay.src = state.selectedFrame.src; overlay.style.display = 'block';
-    }
-    setTimeout(()=>{ finishCamera(); }, 400);
-  } else {
-    // 顯示已拍的數量後自動開始下一張倒數
-    // 若已拍超過1張才顯示相框預覽
-    const overlay = document.getElementById('cameraFrameOverlay');
-    if(state.shots.length >= (SHOTS === 3 ? 2 : 2) && state.selectedFrame && state.selectedFrame.src){
-      overlay.src = state.selectedFrame.src; overlay.style.display = 'block';
-    }
-    // 短暫閃白後直接重置並自動開始下一張倒數
-    setTimeout(()=>{
-      resetCameraState();
-      startCountdownThenShoot();
-    }, 600);
-  }
 }
 
 // 計算「cover」裁切：把來源尺寸等比例裁切去填滿目標尺寸，回傳來源圖上要取用的矩形
@@ -1065,24 +1077,46 @@ function drawImageCover(ctx, img, x, y, w, h){
   ctx.drawImage(img, sx,sy,sw,sh, x,y,w,h);
 }
 
-function finishCamera(){
+async function goToPreview(){
   if(state.stream) state.stream.getTracks().forEach(t=>t.stop());
+  goTo('preview');
+  // 合成預覽（含相框）
+  const canvas = document.getElementById('previewCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = OUT_W; canvas.height = OUT_H;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, OUT_W, OUT_H);
+  const images = await Promise.all(state.shots.map(loadImage));
+  if(state.layout === '2x3'){ draw2x3Layout(ctx, images); }
+  else { draw2x2Layout(ctx, images); }
+  if(state.selectedFrame && state.selectedFrame.src){
+    const frameImg = await loadImage(state.selectedFrame.src).catch(()=>null);
+    if(frameImg) ctx.drawImage(frameImg, 0, 0, OUT_W, OUT_H);
+  }
+}
+
+function finishCamera(){
+  goToPreview();
+}
+
+document.getElementById('btnPreviewBack').addEventListener('click', ()=>{
+  startCamera();
+});
+
+document.getElementById('btnConfirmPrint').addEventListener('click', ()=>{
   goTo('printing');
   composeAndPrint();
-}
+});
 
 /* ---------- 4. 列印中 ---------- */
 document.getElementById('btnPrintBack').addEventListener('click', ()=>{
   const popup = document.getElementById('donePopup');
   if(popup.classList.contains('open')){
-    // 完成畫面：返回首頁
     popup.classList.remove('open');
-    document.getElementById('printNavTitle').textContent = '照片列印中';
     document.getElementById('printingStageInfo').style.display = '';
     resetToWelcome();
   } else {
-    // 列印中：返回拍照（startCamera 內部會切換畫面）
-    startCamera();
+    goTo('preview');
   }
 });
 
@@ -1130,7 +1164,6 @@ function draw2x2Layout(ctx, images){
 
 async function composeAndPrint(){
   // 重置狀態
-  document.getElementById('printNavTitle').textContent = '照片列印中';
   document.getElementById('printingStageInfo').style.display = '';
   document.getElementById('progressFill').style.width = '0%';
   document.getElementById('donePopup').classList.remove('open');
