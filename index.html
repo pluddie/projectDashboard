@@ -516,6 +516,13 @@ body::before{content:'';position:fixed;inset:0;
     <div class="sb-label">Export</div>
     <button class="sb-btn" id="export-btn">Export HTML</button>
   </div>
+  <div class="sb-section">
+    <div class="sb-label">本機暫存（僅存於此瀏覽器）</div>
+    <button class="sb-btn" id="save-local-btn" style="margin-bottom:6px">本機暫存</button>
+    <button class="sb-btn" id="load-local-btn" style="margin-bottom:6px">讀取暫存</button>
+    <button class="sb-btn" id="reset-local-btn" style="background:#fde2e1;color:#c0392b">重置暫存</button>
+    <div id="local-temp-status" style="font-size:11px;color:var(--text-3,#888);margin-top:6px"></div>
+  </div>
 </div>
 
 <!-- Popups -->
@@ -1397,6 +1404,68 @@ document.getElementById('export-btn').addEventListener('click',()=>{
    text instead of quoted ISO strings, so the result is valid executable
    JS (not just JSON data) that reconstructs real Date objects when the
    exported file is opened. */
+/* ═══ LOCAL TEMP STORAGE (browser-only, manual save/load/reset) ═══
+   Nothing here runs automatically. Data is only written to localStorage
+   when the user clicks "本機暫存", and only read back when the user clicks
+   "讀取暫存" — refreshing does NOT auto-restore it (that's still Export's
+   job, per the note above about why localStorage auto-save was removed). */
+const LOCAL_TEMP_KEY='projectDashboard_local_temp_v2';
+function dateReplacer(key,value){
+  const v=this[key];
+  if(v instanceof Date) return {__isDate:true,t:v.getTime()};
+  return value;
+}
+function dateReviver(key,value){
+  if(value&&typeof value==='object'&&value.__isDate) return new Date(value.t);
+  return value;
+}
+function localTempStatusText(){
+  try{
+    const raw=localStorage.getItem(LOCAL_TEMP_KEY);
+    if(!raw) return '目前沒有本機暫存資料。';
+    const snap=JSON.parse(raw);
+    return snap.savedAt?('上次本機暫存時間：'+new Date(snap.savedAt).toLocaleString()):'已有本機暫存資料。';
+  }catch(e){ return '目前沒有本機暫存資料。'; }
+}
+function refreshLocalTempStatus(){
+  const el=document.getElementById('local-temp-status');
+  if(el) el.textContent=localTempStatusText();
+}
+document.getElementById('save-local-btn').addEventListener('click',()=>{
+  try{
+    const snapshot={projects,updates,pageTitle:document.getElementById('page-title').textContent,savedAt:new Date().toISOString()};
+    localStorage.setItem(LOCAL_TEMP_KEY,JSON.stringify(snapshot,dateReplacer));
+    _dirty=false;
+    refreshLocalTempStatus();
+    alert('已存入本機暫存');
+  }catch(err){ console.error(err); alert('本機暫存失敗'); }
+});
+document.getElementById('load-local-btn').addEventListener('click',()=>{
+  const raw=localStorage.getItem(LOCAL_TEMP_KEY);
+  if(!raw){ alert('尚未有本機暫存資料'); return; }
+  if(!confirm('讀取本機暫存將覆蓋目前畫面上尚未儲存的內容，確定要讀取嗎？')) return;
+  try{
+    const snap=JSON.parse(raw,dateReviver);
+    if(Array.isArray(snap.projects)) projects=snap.projects;
+    if(Array.isArray(snap.updates)) updates=snap.updates;
+    if(snap.pageTitle) document.getElementById('page-title').textContent=snap.pageTitle;
+    applyZoom();
+    renderGantt();
+    renderUpdates();
+    _dirty=false;
+    closeSidebar();
+    alert('已讀取本機暫存（'+(snap.savedAt?new Date(snap.savedAt).toLocaleString():'')+'）');
+  }catch(err){ console.error(err); alert('讀取失敗，暫存資料可能已損毀'); }
+});
+document.getElementById('reset-local-btn').addEventListener('click',()=>{
+  if(!localStorage.getItem(LOCAL_TEMP_KEY)){ alert('目前沒有本機暫存資料'); return; }
+  if(!confirm('確定要清除本機暫存資料嗎？此動作無法復原（目前畫面上的內容不受影響）。')) return;
+  localStorage.removeItem(LOCAL_TEMP_KEY);
+  refreshLocalTempStatus();
+  alert('已清除本機暫存資料');
+});
+document.getElementById('settings-btn').addEventListener('click',refreshLocalTempStatus);
+
 function jsLiteral(val){
   if(val instanceof Date)return 'new Date('+val.getTime()+')';
   if(Array.isArray(val))return '['+val.map(jsLiteral).join(',')+']';
@@ -1528,6 +1597,7 @@ if(window.innerWidth<=640)setLblCollapsed(true);
 applyZoom();
 renderGantt();
 renderUpdates();
+refreshLocalTempStatus();
 _initialRender=false; // from now on, any change marks the page as unsaved
 // Default view: show January of the base year, left-aligned, so the
 // project list starts right at the beginning of the timeline.
