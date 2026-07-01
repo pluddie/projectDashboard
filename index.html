@@ -533,6 +533,19 @@ body::before{content:'';position:fixed;inset:0;
 </div>
 
 <script>
+/* ═══ CLOSE / REFRESH WARNING ═══
+   Remind the user to Export before they lose unsaved edits. We only
+   show the prompt if data has actually changed from the initial defaults
+   (tracked by _dirty), so a fresh open-and-close doesn't nag them. */
+let _dirty=false;
+let _initialRender=true;
+function markDirty(){if(!_initialRender)_dirty=true;}
+window.addEventListener('beforeunload',e=>{
+  if(!_dirty)return;
+  e.preventDefault();
+  e.returnValue=''; // required for Chrome/Edge to show the dialog
+});
+
 /* ═══ CONSTANTS & STATE ═══ */
 // One-time cleanup: an earlier version of this file auto-saved to
 // localStorage. This version doesn't use localStorage at all — refreshing
@@ -709,6 +722,7 @@ function autoProgress(bar){
 
 /* ═══ GANTT RENDER ═══ */
 function renderGantt(){
+  markDirty();
   const weeks=getWeeks();
   const mGroups=getMonthGroups(weeks);
   const totalW=weeks.length*WEEK_W;
@@ -1322,6 +1336,7 @@ function addProject(){
 /* ═══ UPDATES ═══ */
 const STATUS_CYCLE={green:'yellow',yellow:'red',red:'green'};
 function renderUpdates(){
+  markDirty();
   const body=document.getElementById('updates-body');body.innerHTML='';
   updates.forEach(u=>{
     const item=document.createElement('div');item.className='update-item';
@@ -1376,6 +1391,7 @@ document.getElementById('export-btn').addEventListener('click',()=>{
   scriptEl.textContent=js;
 
   downloadHtml('<!DOCTYPE html>\n'+clone.outerHTML);
+  _dirty=false; // data is now saved — no need to warn on close
 });
 /* Like JSON.stringify, but Date instances become `new Date(...)` source
    text instead of quoted ISO strings, so the result is valid executable
@@ -1512,6 +1528,7 @@ if(window.innerWidth<=640)setLblCollapsed(true);
 applyZoom();
 renderGantt();
 renderUpdates();
+_initialRender=false; // from now on, any change marks the page as unsaved
 // Default view: show January of the base year, left-aligned, so the
 // project list starts right at the beginning of the timeline.
 scrollToYear(BASE_YEAR);
